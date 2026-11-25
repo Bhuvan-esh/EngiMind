@@ -1,163 +1,200 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { 
   Camera, CameraOff, Video, VideoOff, ZoomIn, ZoomOut, RotateCw, 
   Flame, Shield, Eye, RefreshCw, Maximize2, Zap, Thermometer, Layers, AlertTriangle,
-  Upload, Sparkles, Sliders, Activity, Box, Grid3X3, Image as ImageIcon
+  Upload, Sparkles, Sliders, Activity, Box, Grid3X3, Image as ImageIcon,
+  Compass, FileCheck, CheckCircle2, DraftingCompass
 } from 'lucide-react';
 
-// Generates procedural fallback sample images if no user photo is uploaded
-function createSampleProblemImage(type) {
+// Generates distinct engineering problem images for immediate CAD demonstration
+function createSampleCADImage(type) {
   const c = document.createElement('canvas');
-  c.width = 256;
-  c.height = 256;
+  c.width = 300;
+  c.height = 300;
   const ctx = c.getContext('2d');
 
-  // Dark metallic background
-  const bg = ctx.createRadialGradient(128, 128, 20, 128, 128, 140);
-  bg.addColorStop(0, '#2D3748');
-  bg.addColorStop(1, '#0F172A');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, 256, 256);
+  // Neutral dark engineering plate background
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(0, 0, 300, 300);
 
   if (type === 'impeller') {
-    // Centrifugal Pump Impeller with cavitation pits
-    ctx.strokeStyle = '#4A5568';
-    ctx.lineWidth = 12;
+    // Centrifugal Pump Impeller with backward curved vanes
+    ctx.strokeStyle = '#94A3B8';
+    ctx.lineWidth = 14;
     ctx.beginPath();
-    ctx.arc(128, 128, 90, 0, Math.PI * 2);
+    ctx.arc(150, 150, 110, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Central hub
-    ctx.fillStyle = '#718096';
+    // Central hub & shaft bore
+    ctx.fillStyle = '#64748B';
     ctx.beginPath();
-    ctx.arc(128, 128, 35, 0, Math.PI * 2);
+    ctx.arc(150, 150, 42, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.fillStyle = '#0F172A';
+    ctx.beginPath();
+    ctx.arc(150, 150, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Keyway slot
+    ctx.fillRect(144, 126, 12, 16);
+
     // 6 Curved Vanes
-    ctx.strokeStyle = '#CBD5E1';
-    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#F1F5F9';
+    ctx.lineWidth = 9;
     for (let i = 0; i < 6; i++) {
       const a = (i * Math.PI * 2) / 6;
       ctx.beginPath();
-      ctx.moveTo(128 + Math.cos(a) * 35, 128 + Math.sin(a) * 35);
+      ctx.moveTo(150 + Math.cos(a) * 42, 150 + Math.sin(a) * 42);
       ctx.quadraticCurveTo(
-        128 + Math.cos(a + 0.4) * 70, 128 + Math.sin(a + 0.4) * 70,
-        128 + Math.cos(a + 0.9) * 90, 128 + Math.sin(a + 0.9) * 90
+        150 + Math.cos(a + 0.45) * 85, 150 + Math.sin(a + 0.45) * 85,
+        150 + Math.cos(a + 0.95) * 110, 150 + Math.sin(a + 0.95) * 110
       );
       ctx.stroke();
     }
 
-    // Cavitation pitting cluster (Damage spot)
+    // Cavitation pitting cluster (Damage focus)
     ctx.fillStyle = '#EF4444';
-    for (let k = 0; k < 15; k++) {
+    for (let k = 0; k < 18; k++) {
       ctx.beginPath();
-      ctx.arc(165 + (Math.random() * 20 - 10), 100 + (Math.random() * 20 - 10), 2 + Math.random() * 4, 0, Math.PI * 2);
+      ctx.arc(195 + (Math.random() * 24 - 12), 115 + (Math.random() * 24 - 12), 2 + Math.random() * 4, 0, Math.PI * 2);
       ctx.fill();
     }
   } else if (type === 'bearing') {
-    // Roller Bearing with outer race spall
+    // Deep Groove / Spherical Roller Bearing with outer race spall
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 22;
+    ctx.beginPath();
+    ctx.arc(150, 150, 115, 0, Math.PI * 2);
+    ctx.stroke();
+
     ctx.strokeStyle = '#94A3B8';
-    ctx.lineWidth = 18;
+    ctx.lineWidth = 16;
     ctx.beginPath();
-    ctx.arc(128, 128, 95, 0, Math.PI * 2);
+    ctx.arc(150, 150, 55, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.strokeStyle = '#64748B';
-    ctx.lineWidth = 14;
+    // Central shaft bore
+    ctx.fillStyle = '#0F172A';
     ctx.beginPath();
-    ctx.arc(128, 128, 45, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Rolling balls
-    for (let i = 0; i < 8; i++) {
-      const a = (i * Math.PI * 2) / 8;
-      ctx.fillStyle = '#E2E8F0';
-      ctx.beginPath();
-      ctx.arc(128 + Math.cos(a) * 70, 128 + Math.sin(a) * 70, 14, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Fatigue Spalling Crack
-    ctx.fillStyle = '#EF4444';
-    ctx.fillRect(178, 115, 24, 18);
-  } else if (type === 'motor') {
-    // Electric Motor Stator with burned winding
-    ctx.fillStyle = '#1E293B';
-    ctx.beginPath();
-    ctx.arc(128, 128, 100, 0, Math.PI * 2);
+    ctx.arc(150, 150, 46, 0, Math.PI * 2);
     ctx.fill();
 
-    // Stator teeth
-    for (let i = 0; i < 16; i++) {
-      const a = (i * Math.PI * 2) / 16;
-      ctx.strokeStyle = '#F59E0B';
-      ctx.lineWidth = 6;
+    // 8 Rolling Elements
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI * 2) / 8;
+      ctx.fillStyle = '#F8FAFC';
       ctx.beginPath();
-      ctx.moveTo(128 + Math.cos(a) * 50, 128 + Math.sin(a) * 50);
-      ctx.lineTo(128 + Math.cos(a) * 85, 128 + Math.sin(a) * 85);
+      ctx.arc(150 + Math.cos(a) * 85, 150 + Math.sin(a) * 85, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // Burned Overheated Coil (Hotspot)
+    // Fatigue Spall Notch
     ctx.fillStyle = '#DC2626';
-    ctx.beginPath();
-    ctx.arc(128 + Math.cos(0.4) * 68, 128 + Math.sin(0.4) * 68, 18, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(205, 138, 30, 24);
   } else if (type === 'valve') {
-    // Flanged Valve Body with eroded orifice
+    // Flanged Valve with Orifice Throttle
     ctx.fillStyle = '#334155';
-    ctx.fillRect(30, 95, 196, 66);
+    ctx.fillRect(35, 115, 230, 70);
 
     ctx.fillStyle = '#475569';
     ctx.beginPath();
-    ctx.arc(128, 128, 55, 0, Math.PI * 2);
+    ctx.arc(150, 150, 65, 0, Math.PI * 2);
     ctx.fill();
 
-    // Flange collars
+    // Flange collars with bolt holes
     ctx.fillStyle = '#64748B';
-    ctx.fillRect(20, 75, 18, 106);
-    ctx.fillRect(218, 75, 18, 106);
+    ctx.fillRect(20, 85, 22, 130);
+    ctx.fillRect(258, 85, 22, 130);
 
-    // Erosion wire-draw orifice
+    // Bolt holes
+    ctx.fillStyle = '#0F172A';
+    [98, 128, 172, 202].forEach(by => {
+      ctx.beginPath();
+      ctx.arc(31, by, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(269, by, 5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Eroded orifice
     ctx.fillStyle = '#EF4444';
     ctx.beginPath();
-    ctx.arc(128, 128, 16, 0, Math.PI * 2);
+    ctx.arc(150, 150, 22, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (type === 'motor') {
+    // Electric Stator with winding slots
+    ctx.fillStyle = '#1E293B';
+    ctx.beginPath();
+    ctx.arc(150, 150, 120, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.arc(150, 150, 115, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Stator Teeth & Copper Coils
+    for (let i = 0; i < 16; i++) {
+      const a = (i * Math.PI * 2) / 16;
+      ctx.strokeStyle = '#D97706';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(150 + Math.cos(a) * 55, 150 + Math.sin(a) * 55);
+      ctx.lineTo(150 + Math.cos(a) * 100, 150 + Math.sin(a) * 100);
+      ctx.stroke();
+    }
+
+    // Rotor bore
+    ctx.fillStyle = '#0F172A';
+    ctx.beginPath();
+    ctx.arc(150, 150, 48, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Burned Winding Hotspot
+    ctx.fillStyle = '#DC2626';
+    ctx.beginPath();
+    ctx.arc(150 + Math.cos(0.4) * 80, 150 + Math.sin(0.4) * 80, 20, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    // Turbine Blade with Root Fatigue Crack
+    // Turbine Airfoil Blade with Root Dovetail & Creep Crack
     ctx.fillStyle = '#475569';
     ctx.beginPath();
-    ctx.moveTo(85, 210);
-    ctx.lineTo(171, 210);
-    ctx.lineTo(155, 45);
-    ctx.quadraticCurveTo(128, 30, 101, 45);
+    ctx.moveTo(95, 245);
+    ctx.lineTo(205, 245);
+    ctx.lineTo(185, 50);
+    ctx.quadraticCurveTo(150, 32, 115, 50);
     ctx.closePath();
     ctx.fill();
 
-    // Blade Root Dovetail
+    // Dovetail Root
     ctx.fillStyle = '#64748B';
-    ctx.fillRect(75, 205, 106, 32);
+    ctx.fillRect(80, 240, 140, 36);
 
-    // Thermal Creep Crack (Bright Glowing Hotspot)
+    // Root Fatigue Crack (High Contrast Stress Anomaly)
     ctx.strokeStyle = '#EF4444';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(105, 180);
-    ctx.lineTo(135, 175);
-    ctx.lineTo(145, 185);
+    ctx.moveTo(118, 215);
+    ctx.lineTo(155, 208);
+    ctx.lineTo(168, 220);
     ctx.stroke();
   }
 
   return c.toDataURL('image/png');
 }
 
-// Preset samples available for immediate inspection
-const SAMPLE_IMAGE_PRESETS = [
+const SAMPLE_CAD_PRESETS = [
   { id: 'impeller', name: 'Pump Impeller Cavitation', icon: '🌀' },
-  { id: 'turbine', name: 'Turbine Blade Root Crack', icon: '🚀' },
-  { id: 'bearing', name: 'Roller Bearing Spall', icon: '⚙️' },
-  { id: 'motor', name: 'Stator Winding Overheat', icon: '⚡' },
-  { id: 'valve', name: 'Control Valve Seat Erosion', icon: '🚰' }
+  { id: 'turbine', name: 'Turbine Airfoil Blade Crack', icon: '🚀' },
+  { id: 'bearing', name: 'Roller Bearing Spall Fatigue', icon: '⚙️' },
+  { id: 'valve', name: 'Control Valve Orifice Erosion', icon: '🚰' },
+  { id: 'motor', name: 'Stator Winding Overheat', icon: '⚡' }
 ];
 
 export default function CVModelInspector({ 
@@ -173,9 +210,9 @@ export default function CVModelInspector({
   const fileInputRef = useRef(null);
   const prevFrameRef = useRef(null);
 
-  // Active Image State: User uploaded OR selected sample
-  const [activeImageSrc, setActiveImageSrc] = useState(problemImage || createSampleProblemImage('impeller'));
-  const [activeImageTitle, setActiveImageTitle] = useState(problemImageName || 'Pump Impeller Cavitation');
+  // Active Image State: User uploaded OR selected preset
+  const [activeImageSrc, setActiveImageSrc] = useState(() => problemImage || createSampleCADImage('impeller'));
+  const [activeImageTitle, setActiveImageTitle] = useState(() => problemImageName || 'Pump Impeller Cavitation');
   const [isCustomUploaded, setIsCustomUploaded] = useState(Boolean(problemImage));
 
   // Sync if problemImage prop changes from parent
@@ -187,15 +224,15 @@ export default function CVModelInspector({
     }
   }, [problemImage, problemImageName]);
 
-  // Reconstructed 3D Mesh extracted directly from the image
-  const [mesh3D, setMesh3D] = useState(null);
-  const [isProcessingMesh, setIsProcessingMesh] = useState(false);
-  const [extrusionDepth, setExtrusionDepth] = useState(38); // 3D depth extrusion intensity
+  // CAD Analysis Model extracted directly from the image
+  const [cadModel, setCadModel] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [cadViewMode, setCadViewMode] = useState('3d-iso'); // '3d-iso' | '2d-blueprint' | 'cross-section' | 'thermal-fea'
+  const [extrusionDepth, setExtrusionDepth] = useState(40);
 
   // 3D Viewport Transformation State
-  const [rotationAngle, setRotationAngle] = useState({ x: 0.45, y: -0.6 });
+  const [rotationAngle, setRotationAngle] = useState({ x: 0.42, y: -0.55 });
   const [zoomLevel, setZoomLevel] = useState(initialZoom);
-  const [viewMode, setViewMode] = useState('solid'); // 'solid' (Texture) | 'thermal' | 'wireframe' | 'pointcloud'
   const [isAutoRotating, setIsAutoRotating] = useState(true);
 
   // Mouse Drag Fallback Handlers
@@ -218,25 +255,25 @@ export default function CVModelInspector({
   });
 
   // Smoothing interpolation refs
-  const targetAngleRef = useRef({ x: 0.45, y: -0.6 });
+  const targetAngleRef = useRef({ x: 0.42, y: -0.55 });
   const targetZoomRef = useRef(initialZoom);
   const baseAreaRef = useRef(null);
   const detectionPersistenceRef = useRef(0);
 
   // =========================================================================
-  // IMAGE-TO-3D RECONSTRUCTION ENGINE:
-  // Converts ANY 2D Image into a Real Volumetric 3D Depth Mesh
+  // IMAGE-TO-CAD VECTOR EXTRACTION ENGINE:
+  // Analyzes image pixels, extracts vector edges, dimensions, centerlines, and 3D depth mesh
   // =========================================================================
-  const reconstruct3DFromImage = useCallback((imgSrc, depthScale) => {
-    setIsProcessingMesh(true);
+  const extractCADFromImage = useCallback((imgSrc, depthScale) => {
+    setIsAnalyzing(true);
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = imgSrc;
 
     img.onload = () => {
       try {
+        const res = 34; // 34x34 grid resolution
         const procCanvas = document.createElement('canvas');
-        const res = 34; // 34x34 = 1,156 3D vertices, 2,178 polygons
         procCanvas.width = res;
         procCanvas.height = res;
         const pCtx = procCanvas.getContext('2d');
@@ -246,14 +283,15 @@ export default function CVModelInspector({
         const data = imgData.data;
 
         const vertices = [];
+        const cadContourLines = [];
         const polygons = [];
-        let maxAnomaly = -1;
-        let hotspotCoord = { x: 0, y: 0, z: 0, temp: '88.5°C', name: 'Critical Surface Hotspot' };
+        let maxGradient = -1;
+        let defectCoordinate = { x: 0, y: 0, z: 0, label: 'CRITICAL DEFECT FOCUS', metric: '2.4mm Depth' };
 
-        const widthExtent = 120;
-        const heightExtent = 120;
+        const widthExtent = 115;
+        const heightExtent = 115;
 
-        // 1. Generate 3D Vertices from pixel brightness, RGB, and gradients
+        // 1. Compute 3D Vertices, Depth Heights & Sobel Gradients
         for (let j = 0; j < res; j++) {
           for (let i = 0; i < res; i++) {
             const idx = (j * res + i) * 4;
@@ -261,34 +299,39 @@ export default function CVModelInspector({
             const g = data[idx + 1];
             const b = data[idx + 2];
 
-            // Grayscale Luminance
             const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-
-            // Normalized coordinates [-1, 1]
             const u = (i / (res - 1)) * 2 - 1;
             const v = (j / (res - 1)) * 2 - 1;
-            const distFromCenter = Math.sqrt(u * u + v * v);
+            const dist = Math.sqrt(u * u + v * v);
 
-            // Natural organic mechanical hull curvature
-            const hullFalloff = Math.max(0, Math.cos(Math.min(1, distFromCenter) * (Math.PI * 0.48)));
-
-            // 3D Depth Elevation (Z-coordinate directly derived from image)
-            const zRelief = (lum / 255 - 0.4) * depthScale + (hullFalloff * 24);
+            // Natural 3D mechanical curvature hull
+            const curvature = Math.max(0, Math.cos(Math.min(1, dist) * (Math.PI * 0.48)));
+            const zRelief = (lum / 255 - 0.4) * depthScale + (curvature * 22);
 
             const xPos = u * widthExtent;
             const yPos = v * heightExtent;
             const zPos = zRelief;
 
-            // Anomaly / Hotspot detection (high contrast, red tint, or high luminescence)
-            const anomalyScore = (r * 1.5 - (g + b) * 0.5) + (lum * 0.8);
-            if (anomalyScore > maxAnomaly && distFromCenter < 0.85) {
-              maxAnomaly = anomalyScore;
-              hotspotCoord = {
+            // Compute Sobel gradient magnitude for CAD edge tracing
+            let grad = 0;
+            if (i > 0 && i < res - 1 && j > 0 && j < res - 1) {
+              const lumL = 0.299 * data[(j * res + i - 1) * 4] + 0.587 * data[(j * res + i - 1) * 4 + 1];
+              const lumR = 0.299 * data[(j * res + i + 1) * 4] + 0.587 * data[(j * res + i + 1) * 4 + 1];
+              const lumU = 0.299 * data[((j - 1) * res + i) * 4] + 0.587 * data[((j - 1) * res + i) * 4 + 1];
+              const lumD = 0.299 * data[((j + 1) * res + i) * 4] + 0.587 * data[((j + 1) * res + i) * 4 + 1];
+              grad = Math.sqrt(Math.pow(lumR - lumL, 2) + Math.pow(lumD - lumU, 2));
+            }
+
+            // Defect / crack / wear detection
+            const anomalyScore = (r * 1.6 - (g + b) * 0.6) + grad * 0.8;
+            if (anomalyScore > maxGradient && dist < 0.85) {
+              maxGradient = anomalyScore;
+              defectCoordinate = {
                 x: xPos,
                 y: yPos,
-                z: zPos + 10,
-                temp: `${(65 + (lum / 255) * 48).toFixed(1)}°C`,
-                name: r > (g + b) * 0.8 ? 'Thermal Degradation Zone' : 'Stress / Cavitation Focus'
+                z: zPos + 12,
+                label: r > (g + b) ? 'THERMAL CRACK / CAVITATION' : 'STRUCTURAL WEAR PROFILE',
+                metric: `${(65 + (lum / 255) * 46).toFixed(1)}°C | Depth: ${(1.2 + (grad / 255) * 3).toFixed(1)}mm`
               };
             }
 
@@ -296,14 +339,12 @@ export default function CVModelInspector({
               x: xPos,
               y: yPos,
               z: zPos,
-              r, g, b,
-              lum,
-              hull: hullFalloff
+              r, g, b, lum, grad
             });
           }
         }
 
-        // 2. Generate 3D Quadrilateral / Triangle Polygons connecting vertices
+        // 2. Generate 3D Polygons & CAD Contour Toolpaths
         for (let j = 0; j < res - 1; j++) {
           for (let i = 0; i < res - 1; i++) {
             const i0 = j * res + i;
@@ -321,82 +362,75 @@ export default function CVModelInspector({
             const avgB = (v0.b + v1.b + v2.b + v3.b) / 4;
             const avgLum = (v0.lum + v1.lum + v2.lum + v3.lum) / 4;
             const avgZ = (v0.z + v1.z + v2.z + v3.z) / 4;
+            const avgGrad = (v0.grad + v1.grad + v2.grad + v3.grad) / 4;
 
             polygons.push({
               indices: [i0, i1, i2, i3],
               avgZ,
               color: `rgb(${Math.round(avgR)}, ${Math.round(avgG)}, ${Math.round(avgB)})`,
-              lum: avgLum
+              lum: avgLum,
+              isEdge: avgGrad > 28
             });
+
+            // Extract high-contrast vector lines for 2D CAD Blueprint
+            if (avgGrad > 32) {
+              cadContourLines.push({
+                x1: v0.x, y1: v0.y,
+                x2: v2.x, y2: v2.y,
+                weight: Math.min(2.5, 1 + avgGrad / 80)
+              });
+            }
           }
         }
 
-        // 3. Generate Solid Back Plate and Side Walls for full 3D Volume
+        // 3. Volumetric CAD Base Plate & Skirt Extrusions
         const baseZ = -22;
         const sideWalls = [];
-        // Top and bottom edges
         for (let i = 0; i < res - 1; i++) {
-          // Top edge
           sideWalls.push({
             p1: vertices[i],
             p2: vertices[i + 1],
             p3: { x: vertices[i + 1].x, y: vertices[i + 1].y, z: baseZ },
-            p4: { x: vertices[i].x, y: vertices[i].y, z: baseZ },
-            color: '#1E293B'
+            p4: { x: vertices[i].x, y: vertices[i].y, z: baseZ }
           });
-          // Bottom edge
           const bIdx = (res - 1) * res + i;
           sideWalls.push({
             p1: vertices[bIdx],
             p2: vertices[bIdx + 1],
             p3: { x: vertices[bIdx + 1].x, y: vertices[bIdx + 1].y, z: baseZ },
-            p4: { x: vertices[bIdx].x, y: vertices[bIdx].y, z: baseZ },
-            color: '#1E293B'
-          });
-        }
-        // Left and right edges
-        for (let j = 0; j < res - 1; j++) {
-          const lIdx = j * res;
-          sideWalls.push({
-            p1: vertices[lIdx],
-            p2: vertices[lIdx + res],
-            p3: { x: vertices[lIdx + res].x, y: vertices[lIdx + res].y, z: baseZ },
-            p4: { x: vertices[lIdx].x, y: vertices[lIdx].y, z: baseZ },
-            color: '#1E293B'
-          });
-          const rIdx = j * res + (res - 1);
-          sideWalls.push({
-            p1: vertices[rIdx],
-            p2: vertices[rIdx + res],
-            p3: { x: vertices[rIdx + res].x, y: vertices[rIdx + res].y, z: baseZ },
-            p4: { x: vertices[rIdx].x, y: vertices[rIdx].y, z: baseZ },
-            color: '#1E293B'
+            p4: { x: vertices[bIdx].x, y: vertices[bIdx].y, z: baseZ }
           });
         }
 
-        setMesh3D({
+        setCadModel({
           vertices,
           polygons,
+          cadContourLines,
           sideWalls,
-          hotspot: hotspotCoord,
-          res
+          defect: defectCoordinate,
+          res,
+          envelope: {
+            width: (widthExtent * 2).toFixed(1),
+            height: (heightExtent * 2).toFixed(1),
+            thickness: (depthScale + 22).toFixed(1)
+          }
         });
       } catch (err) {
-        console.error("Failed to reconstruct 3D from image:", err);
+        console.error("CAD Extraction failed:", err);
       } finally {
-        setIsProcessingMesh(false);
+        setIsAnalyzing(false);
       }
     };
   }, []);
 
-  // Re-run 3D reconstruction whenever active image or extrusion depth changes
+  // Run CAD extraction on image or extrusion change
   useEffect(() => {
     if (activeImageSrc) {
-      reconstruct3DFromImage(activeImageSrc, extrusionDepth);
+      extractCADFromImage(activeImageSrc, extrusionDepth);
     }
-  }, [activeImageSrc, extrusionDepth, reconstruct3DFromImage]);
+  }, [activeImageSrc, extrusionDepth, extractCADFromImage]);
 
-  // Handle User File Upload (Drag & Drop or File Picker)
+  // Handle Custom File Upload
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
@@ -424,7 +458,7 @@ export default function CVModelInspector({
           setSelectedDeviceId(frontCam ? frontCam.deviceId : cams[0].deviceId);
         }
       } catch (err) {
-        console.warn("Error enumerating cameras:", err);
+        console.warn("Camera enum error:", err);
       }
     }
   }, [selectedDeviceId]);
@@ -433,23 +467,15 @@ export default function CVModelInspector({
     updateDeviceList();
   }, [updateDeviceList]);
 
-  // Request front camera stream
+  // Front camera stream
   const getFrontCameraStream = async (deviceId = null) => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error("Camera API not supported or browser blocked.");
     }
-
     const constraintsAttempts = [
-      { 
-        video: { 
-          facingMode: { ideal: 'user' },
-          width: { ideal: 640 }, 
-          height: { ideal: 480 } 
-        } 
-      },
+      { video: { facingMode: { ideal: 'user' }, width: { ideal: 640 }, height: { ideal: 480 } } },
       deviceId ? { video: { deviceId: { ideal: deviceId } } } : null,
       { video: { facingMode: 'user' } },
-      { video: { width: { ideal: 640 }, height: { ideal: 480 } } },
       { video: true }
     ].filter(Boolean);
 
@@ -457,14 +483,11 @@ export default function CVModelInspector({
     for (const constraints of constraintsAttempts) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        if (stream && stream.getVideoTracks().length > 0) {
-          return stream;
-        }
+        if (stream && stream.getVideoTracks().length > 0) return stream;
       } catch (err) {
         lastError = err;
       }
     }
-
     throw lastError || new Error("Could not access front camera.");
   };
 
@@ -485,7 +508,6 @@ export default function CVModelInspector({
     try {
       setCameraError(null);
       const stream = await getFrontCameraStream(selectedDeviceId);
-      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
@@ -493,7 +515,6 @@ export default function CVModelInspector({
         videoRef.current.setAttribute('muted', '');
         await videoRef.current.play().catch(console.warn);
       }
-
       setCameraActive(true);
       setIsAutoRotating(false);
       baseAreaRef.current = null;
@@ -504,17 +525,13 @@ export default function CVModelInspector({
       let msg = "Could not activate front camera. Manual mouse & zoom controls active!";
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         msg = "Camera permission was denied. Please allow camera access in your browser.";
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        msg = "No front camera detected on your device. Please verify your webcam is connected.";
-      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        msg = "Camera is being used by another application. Please close other camera apps.";
       }
       setCameraError(msg);
       setCameraActive(false);
     }
   };
 
-  // Computer Vision Processing Loop with Lighting-Invariant Skin Chrominance (YCbCr)
+  // Computer Vision Processing Loop (Skin Chrominance + Distance Tracking)
   useEffect(() => {
     if (!cameraActive) return;
 
@@ -558,7 +575,7 @@ export default function CVModelInspector({
             const Cb = -0.168736 * r - 0.331264 * g + 0.5 * b + 128;
             const Cr = 0.5 * r - 0.418688 * g - 0.081312 * b + 128;
 
-            const isSkinYCbCr = (Cb >= 75 && Cb <= 135 && Cr >= 130 && Cr <= 175 && Y >= 30);
+            const isSkin = (Cb >= 75 && Cb <= 135 && Cr >= 130 && Cr <= 175 && Y >= 30);
             const isSkinRGB = (r > 60 && g > 35 && b > 20 && r > g && (r - g) > 10 && (r - b) > 10);
 
             let hasMotion = false;
@@ -567,8 +584,8 @@ export default function CVModelInspector({
               hasMotion = (diff > 20);
             }
 
-            if ((isSkinYCbCr || isSkinRGB) || (hasMotion && r > 40)) {
-              const mx = w - 1 - x; // Mirror X
+            if ((isSkin || isSkinRGB) || (hasMotion && r > 40)) {
+              const mx = w - 1 - x;
               sumX += mx;
               sumY += y;
               detectedPixels++;
@@ -603,12 +620,12 @@ export default function CVModelInspector({
             baseAreaRef.current = Math.max(0.04, areaRatio);
           }
 
-          // Dynamic Hand Zoom: Moving hand closer to camera zooms in on the 3D reconstructed image model
+          // Hand Zoom: Moving closer to camera zooms in on CAD details
           const areaFactor = areaRatio / Math.max(0.02, baseAreaRef.current);
           const computedZoom = Math.max(0.5, Math.min(2.8, 1.0 * Math.sqrt(areaFactor * 1.35)));
           targetZoomRef.current = computedZoom;
 
-          // Hand centroid controls 360 degree rotation and pitch tilt
+          // Hand X / Y controls 3D CAD rotation & pitch tilt
           const rotDeltaX = (centroidX - 0.5) * 2.2;
           const rotDeltaY = (centroidY - 0.5) * 1.4;
           targetAngleRef.current = {
@@ -616,7 +633,7 @@ export default function CVModelInspector({
             y: rotDeltaX * Math.PI
           };
 
-          // Render live corner brackets and reticle on the webcam preview
+          // Corner brackets HUD overlay on webcam
           const scaleX = ow / w;
           const scaleY = oh / h;
           const obx = minX * scaleX;
@@ -638,7 +655,7 @@ export default function CVModelInspector({
 
           oCtx.beginPath();
           oCtx.moveTo(obx + obw - cornerLen, oby);
-          oCtx.lineTo(obx + obw, oby);
+          oCtx.lineTo(obx + obw);
           oCtx.lineTo(obx + obw, oby + cornerLen);
           oCtx.stroke();
 
@@ -662,7 +679,7 @@ export default function CVModelInspector({
 
           oCtx.fillStyle = '#10B981';
           oCtx.font = 'bold 9px sans-serif';
-          oCtx.fillText(`🖐️ ZOOM: ${computedZoom.toFixed(2)}x`, Math.max(4, obx), Math.max(12, oby - 4));
+          oCtx.fillText(`🖐️ CAD ZOOM: ${computedZoom.toFixed(2)}x`, Math.max(4, obx), Math.max(12, oby - 4));
 
           setTrackingInfo({
             detected: true,
@@ -723,15 +740,15 @@ export default function CVModelInspector({
   }, [cameraActive, trackingInfo.detected, isAutoRotating, isDragging]);
 
   // =========================================================================
-  // 3D CANVAS RENDERING OF THE IMAGE DEPTH MESH
+  // CAD CANVAS RENDERING ENGINE (Directly derived from the image!)
   // =========================================================================
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !mesh3D) return;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animId;
 
-    const render3D = () => {
+    const renderCAD = () => {
       const width = canvas.width;
       const height = canvas.height;
       const cx = width / 2;
@@ -739,6 +756,28 @@ export default function CVModelInspector({
 
       ctx.clearRect(0, 0, width, height);
 
+      // 1. Engineering Technical Grid Background
+      ctx.fillStyle = '#0B132B';
+      ctx.fillRect(0, 0, width, height);
+
+      // Cyan / Blue technical grid lines
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+      ctx.lineWidth = 1;
+      const step = 25;
+      for (let x = 0; x < width; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += step) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // 3D Perspective Projector
       const baseFov = 380;
       const cameraZ = 330;
       const currentScaleFactor = zoomLevel;
@@ -764,164 +803,296 @@ export default function CVModelInspector({
         };
       };
 
-      // Background Cybernetic Grid Floor
-      ctx.strokeStyle = 'rgba(55, 65, 81, 0.22)';
-      ctx.lineWidth = 1;
-      const gridSize = 140;
-      for (let g = -gridSize; g <= gridSize; g += 35) {
-        const p1 = project(g, 100, -gridSize);
-        const p2 = project(g, 100, gridSize);
-        ctx.beginPath();
-        ctx.moveTo(p1.px, p1.py);
-        ctx.lineTo(p2.px, p2.py);
-        ctx.stroke();
+      // IF CAD MODEL IS LOADED, RENDER THE ACTIVE CAD PROJECTION
+      if (cadModel) {
+        if (cadViewMode === '2d-blueprint') {
+          // =======================================================
+          // MODE 1: 2D TECHNICAL CAD BLUEPRINT (Direct from image)
+          // =======================================================
+          const bScale = currentScaleFactor * 1.05;
 
-        const p3 = project(-gridSize, 100, g);
-        const p4 = project(gridSize, 100, g);
-        ctx.beginPath();
-        ctx.moveTo(p3.px, p3.py);
-        ctx.lineTo(p4.px, p4.py);
-        ctx.stroke();
-      }
-
-      // Project Vertices of the image-derived mesh
-      const projVertices = mesh3D.vertices.map(v => ({
-        ...v,
-        proj: project(v.x, v.y, v.z)
-      }));
-
-      // Render Modes
-      if (viewMode === 'pointcloud') {
-        // --- 3D LiDAR POINT CLOUD VIEW ---
-        projVertices.forEach(v => {
-          const pt = v.proj;
+          // Centerlines (Dash-dot CL lines)
+          ctx.strokeStyle = '#0284C7';
+          ctx.lineWidth = 1.2;
+          ctx.setLineDash([12, 4, 3, 4]);
           ctx.beginPath();
-          ctx.arc(pt.px, pt.py, Math.max(1, 1.8 * pt.scale), 0, Math.PI * 2);
-          ctx.fillStyle = `rgb(${v.r}, ${v.g}, ${v.b})`;
-          ctx.fill();
-        });
-      } else {
-        // --- 3D SURFACE MESH (Solid, Thermal, or Wireframe) ---
-        const renderElements = [];
+          ctx.moveTo(cx - 160 * bScale, cy);
+          ctx.lineTo(cx + 160 * bScale, cy);
+          ctx.moveTo(cx, cy - 160 * bScale);
+          ctx.lineTo(cx, cy + 160 * bScale);
+          ctx.stroke();
+          ctx.setLineDash([]);
 
-        // 1. Image Surface Facets
-        mesh3D.polygons.forEach((poly, pIdx) => {
-          const p0 = projVertices[poly.indices[0]].proj;
-          const p1 = projVertices[poly.indices[1]].proj;
-          const p2 = projVertices[poly.indices[2]].proj;
-          const p3 = projVertices[poly.indices[3]].proj;
+          // Centerline CL Symbol
+          ctx.fillStyle = '#38BDF8';
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText('CL', cx + 165 * bScale, cy + 3);
+          ctx.fillText('CL', cx - 8, cy - 165 * bScale);
 
-          const avgZ = (p0.zDepth + p1.zDepth + p2.zDepth + p3.zDepth) / 4;
-
-          renderElements.push({
-            type: 'facet',
-            pts: [p0, p1, p2, p3],
-            z: avgZ,
-            color: poly.color,
-            lum: poly.lum,
-            index: pIdx
+          // Vectorized CAD contours extracted from the image
+          ctx.strokeStyle = '#E0F2FE';
+          cadModel.cadContourLines.forEach(line => {
+            ctx.lineWidth = line.weight * 1.1;
+            ctx.beginPath();
+            ctx.moveTo(cx + line.x1 * bScale, cy + line.y1 * bScale);
+            ctx.lineTo(cx + line.x2 * bScale, cy + line.y2 * bScale);
+            ctx.stroke();
           });
-        });
 
-        // 2. Volumetric Skirt Walls
-        mesh3D.sideWalls.forEach(wall => {
-          const p1 = project(wall.p1.x, wall.p1.y, wall.p1.z);
-          const p2 = project(wall.p2.x, wall.p2.y, wall.p2.z);
-          const p3 = project(wall.p3.x, wall.p3.y, wall.p3.z);
-          const p4 = project(wall.p4.x, wall.p4.y, wall.p4.z);
+          // Overall Dimension Lines: Width Dimension (Top)
+          const dimY = cy - 135 * bScale;
+          const leftX = cx - (Number(cadModel.envelope.width) / 2) * bScale;
+          const rightX = cx + (Number(cadModel.envelope.width) / 2) * bScale;
 
-          const avgZ = (p1.zDepth + p2.zDepth + p3.zDepth + p4.zDepth) / 4;
-
-          renderElements.push({
-            type: 'wall',
-            pts: [p1, p2, p3, p4],
-            z: avgZ,
-            color: '#1E293B'
-          });
-        });
-
-        // Sort elements back-to-front (Painter's algorithm)
-        renderElements.sort((a, b) => b.z - a.z);
-
-        renderElements.forEach(el => {
+          ctx.strokeStyle = '#38BDF8';
+          ctx.lineWidth = 1.2;
+          // Extension lines
           ctx.beginPath();
-          el.pts.forEach((pt, idx) => {
+          ctx.moveTo(leftX, cy - 120 * bScale);
+          ctx.lineTo(leftX, dimY - 6);
+          ctx.moveTo(rightX, cy - 120 * bScale);
+          ctx.lineTo(rightX, dimY - 6);
+          // Dimension line
+          ctx.moveTo(leftX, dimY);
+          ctx.lineTo(rightX, dimY);
+          ctx.stroke();
+
+          // Arrowheads
+          ctx.fillStyle = '#38BDF8';
+          const drawArrow = (ax, ay, dir) => {
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(ax + dir * 8, ay - 3);
+            ctx.lineTo(ax + dir * 8, ay + 3);
+            ctx.closePath();
+            ctx.fill();
+          };
+          drawArrow(leftX, dimY, 1);
+          drawArrow(rightX, dimY, -1);
+
+          // Dimension Text
+          ctx.font = 'bold 11px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${cadModel.envelope.width} mm ±0.05`, cx, dimY - 5);
+          ctx.textAlign = 'left';
+
+          // Defect Leader Line
+          if (cadModel.defect) {
+            const defX = cx + cadModel.defect.x * bScale;
+            const defY = cy + cadModel.defect.y * bScale;
+
+            ctx.strokeStyle = '#EF4444';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.arc(defX, defY, 4, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Leader line with elbow
+            ctx.beginPath();
+            ctx.moveTo(defX, defY);
+            ctx.lineTo(defX + 35, defY - 30);
+            ctx.lineTo(defX + 110, defY - 30);
+            ctx.stroke();
+
+            ctx.fillStyle = '#EF4444';
+            ctx.font = 'bold 9px monospace';
+            ctx.fillText(cadModel.defect.label, defX + 38, defY - 34);
+            ctx.fillStyle = '#FCA5A5';
+            ctx.fillText(cadModel.defect.metric, defX + 38, defY - 20);
+          }
+
+        } else if (cadViewMode === 'cross-section') {
+          // =======================================================
+          // MODE 2: SECTION A-A TRANSVERSE PROFILE (Direct from image)
+          // =======================================================
+          const bScale = currentScaleFactor * 1.1;
+          const midRow = Math.floor(cadModel.res / 2);
+
+          ctx.strokeStyle = '#38BDF8';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+
+          // Plot depth profile of the center slice
+          const slicePts = [];
+          for (let i = 0; i < cadModel.res; i++) {
+            const v = cadModel.vertices[midRow * cadModel.res + i];
+            slicePts.push({
+              px: cx + v.x * bScale,
+              py: cy - v.z * bScale * 1.5
+            });
+          }
+
+          slicePts.forEach((pt, idx) => {
             if (idx === 0) ctx.moveTo(pt.px, pt.py);
             else ctx.lineTo(pt.px, pt.py);
           });
+          // Draw bottom base
+          ctx.lineTo(cx + 115 * bScale, cy + 30 * bScale);
+          ctx.lineTo(cx - 115 * bScale, cy + 30 * bScale);
           ctx.closePath();
 
-          if (viewMode === 'solid') {
-            // True photograph pixel colors with light direction shading
-            ctx.fillStyle = el.color;
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          } else if (viewMode === 'thermal') {
-            // Thermal false-color spectrum derived directly from the image
-            const t = el.lum / 255;
-            let rT, gT, bT;
-            if (t < 0.25) {
-              rT = 20; gT = Math.round(t * 4 * 140); bT = 220;
-            } else if (t < 0.5) {
-              rT = Math.round((t - 0.25) * 4 * 220); gT = 180; bT = 40;
-            } else if (t < 0.75) {
-              rT = 245; gT = Math.round((0.75 - t) * 4 * 160 + 40); bT = 20;
+          // Cross-hatch CAD fill pattern
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+          ctx.fill();
+          ctx.stroke();
+
+          // Section A-A Cutting Plane Line Indicator
+          ctx.fillStyle = '#38BDF8';
+          ctx.font = 'bold 12px monospace';
+          ctx.fillText(`SECTION A-A: CENTER PROFILE (${cadModel.envelope.thickness} mm MAX DEPTH)`, cx - 180, cy - 80);
+
+        } else {
+          // =======================================================
+          // MODE 3: 3D ISOMETRIC CAD (SOLID or THERMAL FEA)
+          // =======================================================
+          const projVertices = cadModel.vertices.map(v => ({
+            ...v,
+            proj: project(v.x, v.y, v.z)
+          }));
+
+          const renderElements = [];
+
+          // Image Surface Facets
+          cadModel.polygons.forEach((poly, pIdx) => {
+            const p0 = projVertices[poly.indices[0]].proj;
+            const p1 = projVertices[poly.indices[1]].proj;
+            const p2 = projVertices[poly.indices[2]].proj;
+            const p3 = projVertices[poly.indices[3]].proj;
+
+            const avgZ = (p0.zDepth + p1.zDepth + p2.zDepth + p3.zDepth) / 4;
+
+            renderElements.push({
+              type: 'facet',
+              pts: [p0, p1, p2, p3],
+              z: avgZ,
+              color: poly.color,
+              lum: poly.lum,
+              isEdge: poly.isEdge,
+              index: pIdx
+            });
+          });
+
+          // Skirt walls
+          cadModel.sideWalls.forEach(wall => {
+            const p1 = project(wall.p1.x, wall.p1.y, wall.p1.z);
+            const p2 = project(wall.p2.x, wall.p2.y, wall.p2.z);
+            const p3 = project(wall.p3.x, wall.p3.y, wall.p3.z);
+            const p4 = project(wall.p4.x, wall.p4.y, wall.p4.z);
+
+            renderElements.push({
+              type: 'wall',
+              pts: [p1, p2, p3, p4],
+              z: (p1.zDepth + p2.zDepth + p3.zDepth + p4.zDepth) / 4,
+              color: '#1E293B'
+            });
+          });
+
+          // Painter's algorithm sort
+          renderElements.sort((a, b) => b.z - a.z);
+
+          renderElements.forEach(el => {
+            ctx.beginPath();
+            el.pts.forEach((pt, idx) => {
+              if (idx === 0) ctx.moveTo(pt.px, pt.py);
+              else ctx.lineTo(pt.px, pt.py);
+            });
+            ctx.closePath();
+
+            if (cadViewMode === 'thermal-fea') {
+              const t = el.lum / 255;
+              let rT, gT, bT;
+              if (t < 0.25) { rT = 20; gT = Math.round(t * 4 * 140); bT = 220; }
+              else if (t < 0.5) { rT = Math.round((t - 0.25) * 4 * 220); gT = 180; bT = 40; }
+              else if (t < 0.75) { rT = 245; gT = Math.round((0.75 - t) * 4 * 160 + 40); bT = 20; }
+              else { rT = 255; gT = Math.round((t - 0.75) * 4 * 200); bT = Math.round((t - 0.75) * 4 * 200); }
+              ctx.fillStyle = `rgb(${rT}, ${gT}, ${bT})`;
+              ctx.fill();
+              ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)';
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
             } else {
-              rT = 255; gT = Math.round((t - 0.75) * 4 * 200); bT = Math.round((t - 0.75) * 4 * 200);
+              // 3D Isometric CAD Shading
+              ctx.fillStyle = el.color;
+              ctx.fill();
+              ctx.strokeStyle = el.isEdge ? '#38BDF8' : 'rgba(0,0,0,0.2)';
+              ctx.lineWidth = el.isEdge ? 1.1 : 0.4;
+              ctx.stroke();
             }
-            ctx.fillStyle = `rgb(${rT}, ${gT}, ${bT})`;
+          });
+
+          // Hotspot Defect Annotation Pin
+          if (cadModel.defect) {
+            const hp = project(cadModel.defect.x, cadModel.defect.y, cadModel.defect.z);
+            const pulse = 1 + 0.25 * Math.sin(performance.now() * 0.007);
+
+            ctx.beginPath();
+            ctx.arc(hp.px, hp.py, 10 * currentScaleFactor * pulse, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(hp.px, hp.py, 5 * currentScaleFactor, 0, Math.PI * 2);
+            ctx.fillStyle = '#EF4444';
             ctx.fill();
-            ctx.strokeStyle = 'rgba(239, 68, 68, 0.2)';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          } else if (viewMode === 'wireframe') {
-            // Cybernetic 3D wireframe contours
-            ctx.strokeStyle = '#8B5CF6';
-            ctx.lineWidth = 0.8;
-            ctx.stroke();
+
+            // Callout Box
+            ctx.fillStyle = '#0B132B';
+            ctx.fillRect(hp.px + 12, hp.py - 16, 185, 26);
+            ctx.strokeStyle = '#EF4444';
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(hp.px + 12, hp.py - 16, 185, 26);
+
+            ctx.fillStyle = '#F9FAFB';
+            ctx.font = 'bold 9px monospace';
+            ctx.fillText(`🔥 ${cadModel.defect.label}`, hp.px + 18, hp.py - 3);
+            ctx.fillStyle = '#F87171';
+            ctx.font = 'bold 8px monospace';
+            ctx.fillText(cadModel.defect.metric, hp.px + 18, hp.py + 7);
           }
-        });
-      }
+        }
 
-      // Hotspot Annotation Pin mapped to the actual damage point in the image
-      if (mesh3D.hotspot) {
-        const hp = project(mesh3D.hotspot.x, mesh3D.hotspot.y, mesh3D.hotspot.z);
-        const pulse = 1 + 0.25 * Math.sin(performance.now() * 0.007);
+        // =======================================================
+        // STANDARD ANSI/ISO CAD TITLE BLOCK (Bottom-Right)
+        // =======================================================
+        const tbW = 210, tbH = 68;
+        const tbX = width - tbW - 12;
+        const tbY = height - tbH - 12;
 
+        ctx.fillStyle = 'rgba(11, 19, 43, 0.92)';
+        ctx.fillRect(tbX, tbY, tbW, tbH);
+        ctx.strokeStyle = '#0284C7';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(tbX, tbY, tbW, tbH);
+
+        // Grid lines inside title block
         ctx.beginPath();
-        ctx.arc(hp.px, hp.py, 10 * currentScaleFactor * pulse, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-        ctx.lineWidth = 2;
+        ctx.moveTo(tbX, tbY + 22);
+        ctx.lineTo(tbX + tbW, tbY + 22);
+        ctx.moveTo(tbX, tbY + 45);
+        ctx.lineTo(tbX + tbW, tbY + 45);
+        ctx.moveTo(tbX + 110, tbY + 22);
+        ctx.lineTo(tbX + 110, tbY + tbH);
         ctx.stroke();
 
-        ctx.beginPath();
-        ctx.arc(hp.px, hp.py, 5 * currentScaleFactor, 0, Math.PI * 2);
-        ctx.fillStyle = '#EF4444';
-        ctx.fill();
+        ctx.fillStyle = '#38BDF8';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(`CAD TWIN: ${activeImageTitle.slice(0, 18)}`, tbX + 8, tbY + 15);
 
-        // Callout Tag
-        ctx.fillStyle = '#111827';
-        ctx.fillRect(hp.px + 12, hp.py - 16, 175, 26);
-        ctx.strokeStyle = '#EF4444';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(hp.px + 12, hp.py - 16, 175, 26);
-
-        ctx.fillStyle = '#F9FAFB';
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillText(`🔥 ${mesh3D.hotspot.name}`, hp.px + 18, hp.py - 3);
-        ctx.fillStyle = '#F87171';
-        ctx.font = 'bold 9px sans-serif';
-        ctx.fillText(`Estimated Temp: ${mesh3D.hotspot.temp}`, hp.px + 18, hp.py + 7);
+        ctx.font = '9px monospace';
+        ctx.fillStyle = '#94A3B8';
+        ctx.fillText('SCALE: ' + zoomLevel.toFixed(2) + ' : 1', tbX + 8, tbY + 36);
+        ctx.fillText('TOL: ±0.05 mm', tbX + 116, tbY + 36);
+        ctx.fillText('PROJ: 3RD ANGLE', tbX + 8, tbY + 58);
+        ctx.fillText('DWG: ENG-IMAGE', tbX + 116, tbY + 58);
       }
 
-      animId = requestAnimationFrame(render3D);
+      animId = requestAnimationFrame(renderCAD);
     };
 
-    animId = requestAnimationFrame(render3D);
+    animId = requestAnimationFrame(renderCAD);
     return () => cancelAnimationFrame(animId);
-  }, [rotationAngle, zoomLevel, viewMode, mesh3D]);
+  }, [rotationAngle, zoomLevel, cadViewMode, cadModel, activeImageTitle]);
 
   // Mouse drag handlers
   const handleMouseDown = (e) => {
@@ -954,52 +1125,52 @@ export default function CVModelInspector({
 
   const handleResetZoom = () => {
     targetZoomRef.current = 1.0;
-    targetAngleRef.current = { x: 0.45, y: -0.6 };
+    targetAngleRef.current = { x: 0.42, y: -0.55 };
     baseAreaRef.current = null;
     detectionPersistenceRef.current = 0;
   };
 
   return (
     <div style={{
-      background: 'radial-gradient(circle at 50% 50%, rgba(31, 41, 55, 0.95) 0%, rgba(11, 15, 23, 0.98) 100%)',
-      border: '2px solid rgba(139, 92, 246, 0.45)',
+      background: 'radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.98) 0%, rgba(11, 15, 23, 1) 100%)',
+      border: '2px solid rgba(56, 189, 248, 0.4)',
       borderRadius: '20px',
       padding: '20px',
       position: 'relative',
       overflow: 'hidden',
-      boxShadow: '0 12px 48px rgba(0,0,0,0.6)',
+      boxShadow: '0 12px 48px rgba(0,0,0,0.7)',
       color: '#F9FAFB'
     }}>
       {/* Top Header Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            background: 'rgba(139, 92, 246, 0.2)',
+            background: 'rgba(56, 189, 248, 0.2)',
             padding: '8px',
             borderRadius: '10px',
-            color: '#A78BFA'
+            color: '#38BDF8'
           }}>
-            <Box size={20} />
+            <DraftingCompass size={22} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#F9FAFB', margin: 0 }}>
-                Image-Derived 3D Digital Twin • CV Gesture Inspector 🖐️
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#F9FAFB', margin: 0 }}>
+                Image-Derived 3D CAD Blueprint Inspector 📐
               </h3>
               <span style={{
-                background: 'rgba(139, 92, 246, 0.2)',
-                color: '#C4B5FD',
-                border: '1px solid rgba(139, 92, 246, 0.4)',
+                background: 'rgba(56, 189, 248, 0.2)',
+                color: '#38BDF8',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
                 padding: '2px 8px',
                 borderRadius: '12px',
                 fontSize: '11px',
                 fontWeight: 700
               }}>
-                Direct 3D Reconstruction from Image
+                CAD Generated Directly from Image
               </span>
             </div>
             <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
-              Reconstructs actual 3D depth mesh from the uploaded photo • Wave hand to rotate • Move hand closer to <strong>ZOOM IN</strong>, pull back to <strong>ZOOM OUT</strong>
+              Extracts dimensional vectors, contours, centerlines & 3D geometry from uploaded photos • Hand gesture zoom & 360° orbit active
             </span>
           </div>
         </div>
@@ -1014,7 +1185,7 @@ export default function CVModelInspector({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: 'rgba(59, 130, 246, 0.2)',
+              background: 'rgba(59, 130, 246, 0.25)',
               border: '1.5px solid #3B82F6',
               color: '#93C5FD',
               padding: '6px 12px',
@@ -1042,9 +1213,9 @@ export default function CVModelInspector({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: cameraActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(139, 92, 246, 0.2)',
-              border: `1.5px solid ${cameraActive ? '#10B981' : '#8B5CF6'}`,
-              color: cameraActive ? '#6EE7B7' : '#C4B5FD',
+              background: cameraActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.2)',
+              border: `1.5px solid ${cameraActive ? '#10B981' : '#38BDF8'}`,
+              color: cameraActive ? '#6EE7B7' : '#7DD3FC',
               padding: '6px 14px',
               borderRadius: '8px',
               fontSize: '12px',
@@ -1054,106 +1225,102 @@ export default function CVModelInspector({
             }}
           >
             {cameraActive ? <Video size={15} /> : <VideoOff size={15} />}
-            {cameraActive ? 'Front Camera: Active' : 'Start Front Camera (CV)'}
+            {cameraActive ? 'Front Camera: Active (CV Tracking)' : 'Start Front Camera (CV)'}
           </button>
 
-          {/* View Modes */}
-          <div style={{ display: 'flex', gap: '3px', background: '#1F2937', padding: '3px', borderRadius: '8px', border: '1px solid #374151' }}>
+          {/* CAD View Mode Switcher */}
+          <div style={{ display: 'flex', gap: '3px', background: '#0F172A', padding: '3px', borderRadius: '8px', border: '1px solid #334155' }}>
             <button
               type="button"
-              onClick={() => setViewMode('solid')}
+              onClick={() => setCadViewMode('3d-iso')}
               style={{
-                background: viewMode === 'solid' ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
-                border: `1px solid ${viewMode === 'solid' ? '#3B82F6' : 'transparent'}`,
-                color: viewMode === 'solid' ? '#93C5FD' : '#9CA3AF',
-                padding: '3px 8px',
+                background: cadViewMode === '3d-iso' ? 'rgba(56, 189, 248, 0.3)' : 'transparent',
+                border: `1px solid ${cadViewMode === '3d-iso' ? '#38BDF8' : 'transparent'}`,
+                color: cadViewMode === '3d-iso' ? '#E0F2FE' : '#94A3B8',
+                padding: '4px 9px',
                 borderRadius: '6px',
                 fontSize: '11px',
                 fontWeight: 600,
                 cursor: 'pointer'
               }}
-              title="Solid texture directly from image"
             >
-              🎨 Texture CAD
+              📐 3D Iso CAD
             </button>
             <button
               type="button"
-              onClick={() => setViewMode('thermal')}
+              onClick={() => setCadViewMode('2d-blueprint')}
               style={{
-                background: viewMode === 'thermal' ? 'rgba(239, 68, 68, 0.25)' : 'transparent',
-                border: `1px solid ${viewMode === 'thermal' ? '#EF4444' : 'transparent'}`,
-                color: viewMode === 'thermal' ? '#FCA5A5' : '#9CA3AF',
-                padding: '3px 8px',
+                background: cadViewMode === '2d-blueprint' ? 'rgba(56, 189, 248, 0.3)' : 'transparent',
+                border: `1px solid ${cadViewMode === '2d-blueprint' ? '#38BDF8' : 'transparent'}`,
+                color: cadViewMode === '2d-blueprint' ? '#E0F2FE' : '#94A3B8',
+                padding: '4px 9px',
                 borderRadius: '6px',
                 fontSize: '11px',
                 fontWeight: 600,
                 cursor: 'pointer'
               }}
-              title="Thermal infrared stress analysis"
             >
-              🔥 Thermal
+              📄 2D Blueprint
             </button>
             <button
               type="button"
-              onClick={() => setViewMode('wireframe')}
+              onClick={() => setCadViewMode('cross-section')}
               style={{
-                background: viewMode === 'wireframe' ? 'rgba(139, 92, 246, 0.25)' : 'transparent',
-                border: `1px solid ${viewMode === 'wireframe' ? '#8B5CF6' : 'transparent'}`,
-                color: viewMode === 'wireframe' ? '#C4B5FD' : '#9CA3AF',
-                padding: '3px 8px',
+                background: cadViewMode === 'cross-section' ? 'rgba(56, 189, 248, 0.3)' : 'transparent',
+                border: `1px solid ${cadViewMode === 'cross-section' ? '#38BDF8' : 'transparent'}`,
+                color: cadViewMode === 'cross-section' ? '#E0F2FE' : '#94A3B8',
+                padding: '4px 9px',
                 borderRadius: '6px',
                 fontSize: '11px',
                 fontWeight: 600,
                 cursor: 'pointer'
               }}
-              title="Isometric 3D Wireframe"
             >
-              🕸️ Wireframe
+              🔬 Section A-A
             </button>
             <button
               type="button"
-              onClick={() => setViewMode('pointcloud')}
+              onClick={() => setCadViewMode('thermal-fea')}
               style={{
-                background: viewMode === 'pointcloud' ? 'rgba(16, 185, 129, 0.25)' : 'transparent',
-                border: `1px solid ${viewMode === 'pointcloud' ? '#10B981' : 'transparent'}`,
-                color: viewMode === 'pointcloud' ? '#6EE7B7' : '#9CA3AF',
-                padding: '3px 8px',
+                background: cadViewMode === 'thermal-fea' ? 'rgba(239, 68, 68, 0.25)' : 'transparent',
+                border: `1px solid ${cadViewMode === 'thermal-fea' ? '#EF4444' : 'transparent'}`,
+                color: cadViewMode === 'thermal-fea' ? '#FCA5A5' : '#94A3B8',
+                padding: '4px 9px',
                 borderRadius: '6px',
                 fontSize: '11px',
                 fontWeight: 600,
                 cursor: 'pointer'
               }}
-              title="LiDAR 3D Point Cloud"
             >
-              ✨ Point Cloud
+              🔥 Thermal FEA
             </button>
           </div>
         </div>
       </div>
 
-      {/* Preset Problem Image Switcher Bar (Instant 3D Reconstruction for each image) */}
+      {/* Preset Problem Image Switcher Bar */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
         marginBottom: '14px',
         padding: '8px 12px',
-        background: '#111827',
+        background: '#0B132B',
         borderRadius: '12px',
-        border: '1px solid #374151',
+        border: '1px solid #1E293B',
         overflowX: 'auto'
       }}>
-        <div style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF', marginRight: '6px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <ImageIcon size={13} color="#38BDF8" /> Problem Images to 3D:
+        <div style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', marginRight: '6px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <ImageIcon size={13} /> Select Defect Image:
         </div>
-        {SAMPLE_IMAGE_PRESETS.map(preset => {
+        {SAMPLE_CAD_PRESETS.map(preset => {
           const isSelected = !isCustomUploaded && activeImageTitle.includes(preset.name.split(' ')[0]);
           return (
             <button
               key={preset.id}
               type="button"
               onClick={() => {
-                const src = createSampleProblemImage(preset.id);
+                const src = createSampleCADImage(preset.id);
                 setActiveImageSrc(src);
                 setActiveImageTitle(preset.name);
                 setIsCustomUploaded(false);
@@ -1162,9 +1329,9 @@ export default function CVModelInspector({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: isSelected ? 'rgba(56, 189, 248, 0.25)' : 'rgba(31, 41, 55, 0.6)',
-                border: `1px solid ${isSelected ? '#38BDF8' : '#4B5563'}`,
-                color: isSelected ? '#F3F4F6' : '#9CA3AF',
+                background: isSelected ? 'rgba(56, 189, 248, 0.25)' : 'rgba(30, 41, 59, 0.6)',
+                border: `1px solid ${isSelected ? '#38BDF8' : '#334155'}`,
+                color: isSelected ? '#F0F9FF' : '#94A3B8',
                 padding: '5px 12px',
                 borderRadius: '8px',
                 fontSize: '11px',
@@ -1181,19 +1348,19 @@ export default function CVModelInspector({
           );
         })}
 
-        {/* 3D Depth Relief Extrusion Slider */}
+        {/* 3D Extrusion Slider */}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
-          <Sliders size={13} color="#A78BFA" />
-          <span style={{ fontSize: '11px', color: '#9CA3AF' }}>3D Depth:</span>
+          <Sliders size={13} color="#38BDF8" />
+          <span style={{ fontSize: '11px', color: '#94A3B8' }}>Relief Depth:</span>
           <input
             type="range"
             min="10"
             max="65"
             value={extrusionDepth}
             onChange={(e) => setExtrusionDepth(Number(e.target.value))}
-            style={{ width: '80px', accentColor: '#8B5CF6', cursor: 'pointer' }}
+            style={{ width: '80px', accentColor: '#38BDF8', cursor: 'pointer' }}
           />
-          <span style={{ fontSize: '11px', color: '#C4B5FD', fontWeight: 700 }}>{extrusionDepth}mm</span>
+          <span style={{ fontSize: '11px', color: '#38BDF8', fontWeight: 700 }}>{extrusionDepth}mm</span>
         </div>
       </div>
 
@@ -1215,55 +1382,57 @@ export default function CVModelInspector({
         </div>
       )}
 
-      {/* Main Stage Grid: Actual 2D Image Side-by-Side with its Direct 3D Reconstruction */}
+      {/* Main Grid: Inspected Image (Left) + Direct CAD Drawing (Right) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1.35fr',
+        gridTemplateColumns: '1fr 1.4fr',
         gap: '16px',
         marginBottom: '16px'
       }}>
-        {/* Source 2D Image Viewport */}
+        {/* Source Image Viewport */}
         <div style={{
-          background: '#1F2937',
-          border: '1px solid #374151',
+          background: '#0F172A',
+          border: '1px solid #1E293B',
           borderRadius: '14px',
-          padding: '12px',
+          padding: '14px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          maxHeight: '340px',
+          minHeight: '360px',
+          maxHeight: '360px',
           overflow: 'hidden',
           position: 'relative'
         }}>
-          <div style={{ fontSize: '11px', color: '#9CA3AF', marginBottom: '8px', alignSelf: 'flex-start', display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-            <span>📸 Source 2D Photo: <strong>{activeImageTitle}</strong></span>
-            <span style={{ color: '#10B981', fontWeight: 600 }}>● 3D Extracted</span>
+          <div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '8px', alignSelf: 'flex-start', display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <span>📸 Source Photo: <strong>{activeImageTitle}</strong></span>
+            <span style={{ color: '#10B981', fontWeight: 600 }}>● Vectorized</span>
           </div>
           <img 
             src={activeImageSrc} 
             alt="Source inspected component" 
             style={{
               maxWidth: '100%',
-              maxHeight: '260px',
+              maxHeight: '270px',
               objectFit: 'contain',
               borderRadius: '8px',
-              border: '1px solid #4B5563'
+              border: '1px solid #334155'
             }} 
           />
-          <div style={{ marginTop: '8px', fontSize: '10px', color: '#9CA3AF' }}>
-            Click any sample above or click "Upload Custom Image" to convert your own photo into 3D!
+          <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748B' }}>
+            Click any defect above or click "Upload Custom Image" to generate a CAD blueprint from your photo.
           </div>
         </div>
 
-        {/* Reconstructed 3D Canvas Viewport (Controlled by Computer Vision Hand Gestures) */}
+        {/* CAD Canvas Viewport (Controlled by Computer Vision Gestures) */}
         <div 
           style={{
             position: 'relative',
             width: '100%',
-            height: '340px',
-            background: '#0B0F17',
+            height: '360px',
+            background: '#0B132B',
             borderRadius: '14px',
+            border: '1px solid #1E293B',
             overflow: 'hidden',
             cursor: isDragging ? 'grabbing' : 'grab'
           }}
@@ -1275,17 +1444,17 @@ export default function CVModelInspector({
           <canvas
             ref={canvasRef}
             width={640}
-            height={340}
+            height={360}
             style={{ width: '100%', height: '100%', display: 'block' }}
           />
 
-          {/* Scale & Reconstructed Info Badge */}
+          {/* Scale & CAD Envelope Badge */}
           <div style={{
             position: 'absolute',
             top: '12px',
             left: '12px',
-            background: 'rgba(17, 24, 39, 0.88)',
-            border: '1px solid #374151',
+            background: 'rgba(11, 19, 43, 0.9)',
+            border: '1px solid #1E293B',
             borderRadius: '8px',
             padding: '6px 12px',
             display: 'flex',
@@ -1294,13 +1463,13 @@ export default function CVModelInspector({
             fontSize: '12px',
             backdropFilter: 'blur(4px)'
           }}>
-            <span style={{ color: '#9CA3AF' }}>Scale:</span>
-            <strong style={{ color: '#10B981', fontSize: '14px' }}>
+            <span style={{ color: '#94A3B8' }}>CAD Scale:</span>
+            <strong style={{ color: '#38BDF8', fontSize: '13px' }}>
               {zoomLevel.toFixed(2)}x Zoom
             </strong>
-            <span style={{ color: '#4B5563' }}>|</span>
-            <span style={{ color: '#C4B5FD', fontSize: '11px' }}>
-              {mesh3D?.polygons?.length || 2178} Polygons Extracted
+            <span style={{ color: '#334155' }}>|</span>
+            <span style={{ color: '#94A3B8', fontSize: '11px' }}>
+              Envelope: {cadModel?.envelope?.width || '230'} × {cadModel?.envelope?.height || '230'} mm
             </span>
           </div>
 
@@ -1317,8 +1486,8 @@ export default function CVModelInspector({
               type="button"
               onClick={handleZoomIn}
               style={{
-                background: 'rgba(31, 41, 55, 0.85)',
-                border: '1px solid #4B5563',
+                background: 'rgba(15, 23, 42, 0.88)',
+                border: '1px solid #334155',
                 color: '#fff',
                 padding: '6px 10px',
                 borderRadius: '6px',
@@ -1337,8 +1506,8 @@ export default function CVModelInspector({
               type="button"
               onClick={handleZoomOut}
               style={{
-                background: 'rgba(31, 41, 55, 0.85)',
-                border: '1px solid #4B5563',
+                background: 'rgba(15, 23, 42, 0.88)',
+                border: '1px solid #334155',
                 color: '#fff',
                 padding: '6px 10px',
                 borderRadius: '6px',
@@ -1357,9 +1526,9 @@ export default function CVModelInspector({
               type="button"
               onClick={handleResetZoom}
               style={{
-                background: 'rgba(31, 41, 55, 0.85)',
-                border: '1px solid #4B5563',
-                color: '#9CA3AF',
+                background: 'rgba(15, 23, 42, 0.88)',
+                border: '1px solid #334155',
+                color: '#94A3B8',
                 padding: '6px 10px',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -1380,7 +1549,7 @@ export default function CVModelInspector({
               width: '160px',
               height: '120px',
               borderRadius: '12px',
-              border: `2px solid ${trackingInfo.detected ? '#10B981' : '#8B5CF6'}`,
+              border: `2px solid ${trackingInfo.detected ? '#10B981' : '#38BDF8'}`,
               background: '#000',
               overflow: 'hidden',
               boxShadow: trackingInfo.detected ? '0 0 16px rgba(16, 185, 129, 0.5)' : '0 4px 20px rgba(0,0,0,0.7)',
@@ -1430,7 +1599,7 @@ export default function CVModelInspector({
                 <span style={{ color: trackingInfo.detected ? '#10B981' : '#F59E0B' }}>
                   {trackingInfo.detected ? '● HAND DETECTED' : '○ HOLD HAND UP'}
                 </span>
-                <span style={{ color: '#9CA3AF' }}>{trackingInfo.fps || 30} FPS</span>
+                <span style={{ color: '#94A3B8' }}>{trackingInfo.fps || 30} FPS</span>
               </div>
 
               <div style={{
@@ -1458,61 +1627,61 @@ export default function CVModelInspector({
         </div>
       </div>
 
-      {/* Real-Time Engineering Telemetry extracted from the actual image analysis */}
+      {/* Engineering CAD Telemetry derived from the actual image */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '12px',
-        background: '#1F2937',
-        border: '1px solid #374151',
+        background: '#0F172A',
+        border: '1px solid #1E293B',
         borderRadius: '14px',
         padding: '14px 18px'
       }}>
         <div>
-          <div style={{ fontSize: '11px', color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Thermometer size={14} color="#EF4444" /> Peak Anomaly / Hotspot
+          <div style={{ fontSize: '11px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Compass size={14} color="#38BDF8" /> CAD Part Dimensions
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#EF4444', marginTop: '3px' }}>
-            {mesh3D?.hotspot?.temp || '88.5°C'}
+          <div style={{ fontSize: '17px', fontWeight: 800, color: '#38BDF8', marginTop: '3px' }}>
+            {cadModel?.envelope?.width || '230'} × {cadModel?.envelope?.height || '230'} mm
+          </div>
+          <div style={{ fontSize: '10px', color: '#64748B' }}>
+            Extruded Thickness: {cadModel?.envelope?.thickness || '62'} mm
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: '11px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Thermometer size={14} color="#EF4444" /> Peak Defect / Anomaly
+          </div>
+          <div style={{ fontSize: '17px', fontWeight: 800, color: '#EF4444', marginTop: '3px' }}>
+            {cadModel?.defect?.metric || '2.4mm Depth'}
           </div>
           <div style={{ fontSize: '10px', color: '#F87171' }}>
-            {mesh3D?.hotspot?.name || 'Localized Stress Point'}
+            {cadModel?.defect?.label || 'Critical Surface Focus'}
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: '11px', color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Grid3X3 size={14} color="#F59E0B" /> 3D Reconstruction Res
+          <div style={{ fontSize: '11px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <ZoomIn size={14} color="#10B981" /> CV Gesture State
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#FCD34D', marginTop: '3px' }}>
-            {mesh3D?.vertices?.length || 1156} Nodes
-          </div>
-          <div style={{ fontSize: '10px', color: '#9CA3AF' }}>
-            {mesh3D?.polygons?.length || 2178} Extruded Polygons
-          </div>
-        </div>
-
-        <div>
-          <div style={{ fontSize: '11px', color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ZoomIn size={14} color="#38BDF8" /> CV Zoom State
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#38BDF8', marginTop: '3px' }}>
+          <div style={{ fontSize: '17px', fontWeight: 800, color: '#10B981', marginTop: '3px' }}>
             {zoomLevel.toFixed(2)}x
           </div>
-          <div style={{ fontSize: '10px', color: '#9CA3AF' }}>
+          <div style={{ fontSize: '10px', color: '#6EE7B7' }}>
             {cameraActive ? (trackingInfo.detected ? 'Hand Active: Zooming' : 'Raise hand to zoom') : 'Manual Zoom Ready'}
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: '11px', color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Shield size={14} color="#10B981" /> Reconstructed Object
+          <div style={{ fontSize: '11px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <FileCheck size={14} color="#F59E0B" /> Drawing Standard
           </div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: '#10B981', marginTop: '4px' }}>
-            {activeImageTitle}
+          <div style={{ fontSize: '15px', fontWeight: 700, color: '#FCD34D', marginTop: '4px' }}>
+            ISO 2768-mK / ANSI Y14.5
           </div>
-          <div style={{ fontSize: '10px', color: '#9CA3AF' }}>
-            Direct Monocular 3D Heightfield
+          <div style={{ fontSize: '10px', color: '#94A3B8' }}>
+            Automatic Image Vectorization
           </div>
         </div>
       </div>

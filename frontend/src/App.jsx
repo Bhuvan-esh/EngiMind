@@ -413,7 +413,7 @@ Ensure it is valid JSON and nothing else.`;
           <div className={`nav-item ${activeView === 'documents' ? 'active' : ''}`} onClick={() => setActiveView('documents')}><FileText size={18} /> Documents</div>
           <div className={`nav-item ${activeView === 'quiz-generator' ? 'active' : ''}`} onClick={() => setActiveView('quiz-generator')}><HelpCircle size={18} /> Quiz Generator</div>
           <div className={`nav-item ${activeView === 'catastrophe-room' ? 'active' : ''}`} onClick={() => setActiveView('catastrophe-room')}><ShieldAlert size={18} color="#EF4444" /> Catastrophe Room 🚨</div>
-          <div className={`nav-item ${activeView === 'cv-inspector' ? 'active' : ''}`} onClick={() => setActiveView('cv-inspector')}><Eye size={18} color="#38BDF8" /> 3D CV Inspector 🖐️</div>
+          <div className={`nav-item ${activeView === 'cad-inspector' ? 'active' : ''}`} onClick={() => setActiveView('cad-inspector')}><Box size={18} color="#38BDF8" /> 3D Image CAD Twin 📐</div>
           <div className={`nav-item ${activeView === 'maintenance-logs' ? 'active' : ''}`} onClick={triggerReportUI}><ClipboardList size={18} /> Maintenance Logs</div>
           <div className={`nav-item ${activeView === 'analytics' ? 'active' : ''}`} onClick={() => setActiveView('analytics')}><BarChart2 size={18} /> Analytics</div>
           <div className={`nav-item ${activeView === 'bookmarks' ? 'active' : ''}`} onClick={() => setActiveView('bookmarks')}><Bookmark size={18} /> Bookmarks</div>
@@ -592,14 +592,6 @@ Ensure it is valid JSON and nothing else.`;
                   <p>Explore subjects and course curriculum.</p>
                   <div className="fc-arrow"><ArrowRight size={14} /></div>
                 </div>
-              </div>
-
-              {/* 3D Component & Problem Inspector with CV Gestures (Orbit & Zoom) */}
-              <div style={{ marginBottom: '24px' }}>
-                <CVModelInspector 
-                  problemImage={imagePreviewUrl} 
-                  problemImageName={file?.name} 
-                />
               </div>
 
               {/* Bottom Grid: Insights & Recommendations */}
@@ -1105,14 +1097,8 @@ Ensure it is valid JSON and nothing else.`;
           />
         )}
 
-        {activeView === 'cv-inspector' && (
-          <div style={{ maxWidth: '960px', margin: '0 auto', width: '100%', padding: '24px 16px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#F9FAFB' }}>3D Component & Problem Inspector</h2>
-              <p style={{ color: '#9CA3AF', fontSize: '14px', marginTop: '4px' }}>
-                Computer Vision Gesture Controls: Move hand closer to <strong>Zoom In</strong>, pull hand back to <strong>Zoom Out</strong>, or drag with mouse.
-              </p>
-            </div>
+        {activeView === 'cad-inspector' && (
+          <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '20px 16px' }}>
             <CVModelInspector problemImage={imagePreviewUrl} problemImageName={file?.name} />
           </div>
         )}
