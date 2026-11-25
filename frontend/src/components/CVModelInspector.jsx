@@ -3,7 +3,7 @@ import {
   Camera, CameraOff, Video, VideoOff, ZoomIn, ZoomOut, RotateCw, 
   Flame, Shield, Eye, RefreshCw, Maximize2, Zap, Thermometer, Layers, AlertTriangle,
   Upload, Sparkles, Sliders, Activity, Box, Grid3X3, Image as ImageIcon,
-  Compass, FileCheck, CheckCircle2, DraftingCompass
+  Compass, FileCheck, CheckCircle2, DraftingCompass, SwitchCamera, MonitorPlay
 } from 'lucide-react';
 
 // Generates distinct engineering problem images for immediate CAD demonstration
@@ -13,7 +13,6 @@ function createSampleCADImage(type) {
   c.height = 300;
   const ctx = c.getContext('2d');
 
-  // Neutral dark engineering plate background
   ctx.fillStyle = '#0F172A';
   ctx.fillRect(0, 0, 300, 300);
 
@@ -25,7 +24,6 @@ function createSampleCADImage(type) {
     ctx.arc(150, 150, 110, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Central hub & shaft bore
     ctx.fillStyle = '#64748B';
     ctx.beginPath();
     ctx.arc(150, 150, 42, 0, Math.PI * 2);
@@ -36,10 +34,8 @@ function createSampleCADImage(type) {
     ctx.arc(150, 150, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    // Keyway slot
     ctx.fillRect(144, 126, 12, 16);
 
-    // 6 Curved Vanes
     ctx.strokeStyle = '#F1F5F9';
     ctx.lineWidth = 9;
     for (let i = 0; i < 6; i++) {
@@ -53,7 +49,6 @@ function createSampleCADImage(type) {
       ctx.stroke();
     }
 
-    // Cavitation pitting cluster (Damage focus)
     ctx.fillStyle = '#EF4444';
     for (let k = 0; k < 18; k++) {
       ctx.beginPath();
@@ -61,7 +56,6 @@ function createSampleCADImage(type) {
       ctx.fill();
     }
   } else if (type === 'bearing') {
-    // Deep Groove / Spherical Roller Bearing with outer race spall
     ctx.strokeStyle = '#CBD5E1';
     ctx.lineWidth = 22;
     ctx.beginPath();
@@ -74,13 +68,11 @@ function createSampleCADImage(type) {
     ctx.arc(150, 150, 55, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Central shaft bore
     ctx.fillStyle = '#0F172A';
     ctx.beginPath();
     ctx.arc(150, 150, 46, 0, Math.PI * 2);
     ctx.fill();
 
-    // 8 Rolling Elements
     for (let i = 0; i < 8; i++) {
       const a = (i * Math.PI * 2) / 8;
       ctx.fillStyle = '#F8FAFC';
@@ -92,11 +84,9 @@ function createSampleCADImage(type) {
       ctx.stroke();
     }
 
-    // Fatigue Spall Notch
     ctx.fillStyle = '#DC2626';
     ctx.fillRect(205, 138, 30, 24);
   } else if (type === 'valve') {
-    // Flanged Valve with Orifice Throttle
     ctx.fillStyle = '#334155';
     ctx.fillRect(35, 115, 230, 70);
 
@@ -105,12 +95,10 @@ function createSampleCADImage(type) {
     ctx.arc(150, 150, 65, 0, Math.PI * 2);
     ctx.fill();
 
-    // Flange collars with bolt holes
     ctx.fillStyle = '#64748B';
     ctx.fillRect(20, 85, 22, 130);
     ctx.fillRect(258, 85, 22, 130);
 
-    // Bolt holes
     ctx.fillStyle = '#0F172A';
     [98, 128, 172, 202].forEach(by => {
       ctx.beginPath();
@@ -121,13 +109,11 @@ function createSampleCADImage(type) {
       ctx.fill();
     });
 
-    // Eroded orifice
     ctx.fillStyle = '#EF4444';
     ctx.beginPath();
     ctx.arc(150, 150, 22, 0, Math.PI * 2);
     ctx.fill();
   } else if (type === 'motor') {
-    // Electric Stator with winding slots
     ctx.fillStyle = '#1E293B';
     ctx.beginPath();
     ctx.arc(150, 150, 120, 0, Math.PI * 2);
@@ -139,7 +125,6 @@ function createSampleCADImage(type) {
     ctx.arc(150, 150, 115, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Stator Teeth & Copper Coils
     for (let i = 0; i < 16; i++) {
       const a = (i * Math.PI * 2) / 16;
       ctx.strokeStyle = '#D97706';
@@ -150,19 +135,16 @@ function createSampleCADImage(type) {
       ctx.stroke();
     }
 
-    // Rotor bore
     ctx.fillStyle = '#0F172A';
     ctx.beginPath();
     ctx.arc(150, 150, 48, 0, Math.PI * 2);
     ctx.fill();
 
-    // Burned Winding Hotspot
     ctx.fillStyle = '#DC2626';
     ctx.beginPath();
     ctx.arc(150 + Math.cos(0.4) * 80, 150 + Math.sin(0.4) * 80, 20, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    // Turbine Airfoil Blade with Root Dovetail & Creep Crack
     ctx.fillStyle = '#475569';
     ctx.beginPath();
     ctx.moveTo(95, 245);
@@ -172,11 +154,9 @@ function createSampleCADImage(type) {
     ctx.closePath();
     ctx.fill();
 
-    // Dovetail Root
     ctx.fillStyle = '#64748B';
     ctx.fillRect(80, 240, 140, 36);
 
-    // Root Fatigue Crack (High Contrast Stress Anomaly)
     ctx.strokeStyle = '#EF4444';
     ctx.lineWidth = 5;
     ctx.beginPath();
@@ -210,12 +190,11 @@ export default function CVModelInspector({
   const fileInputRef = useRef(null);
   const prevFrameRef = useRef(null);
 
-  // Active Image State: User uploaded OR selected preset
+  // Active Image State
   const [activeImageSrc, setActiveImageSrc] = useState(() => problemImage || createSampleCADImage('impeller'));
   const [activeImageTitle, setActiveImageTitle] = useState(() => problemImageName || 'Pump Impeller Cavitation');
   const [isCustomUploaded, setIsCustomUploaded] = useState(Boolean(problemImage));
 
-  // Sync if problemImage prop changes from parent
   useEffect(() => {
     if (problemImage) {
       setActiveImageSrc(problemImage);
@@ -227,7 +206,7 @@ export default function CVModelInspector({
   // CAD Analysis Model extracted directly from the image
   const [cadModel, setCadModel] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [cadViewMode, setCadViewMode] = useState('3d-iso'); // '3d-iso' | '2d-blueprint' | 'cross-section' | 'thermal-fea'
+  const [cadViewMode, setCadViewMode] = useState('3d-iso');
   const [extrusionDepth, setExtrusionDepth] = useState(40);
 
   // 3D Viewport Transformation State
@@ -235,15 +214,19 @@ export default function CVModelInspector({
   const [zoomLevel, setZoomLevel] = useState(initialZoom);
   const [isAutoRotating, setIsAutoRotating] = useState(true);
 
-  // Mouse Drag Fallback Handlers
+  // Mouse Drag Handlers
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // Camera & CV Hand Tracking State
+  // Camera & CV Hand Tracking State with Dynamic Dimensions and Redirection
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const [videoDevices, setVideoDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
+  const [activeCameraLabel, setActiveCameraLabel] = useState('Auto Front Camera');
+  const [cameraDimensions, setCameraDimensions] = useState({ width: 640, height: 480, aspect: '4:3' });
+  const [isVirtualFeed, setIsVirtualFeed] = useState(false);
+
   const [trackingInfo, setTrackingInfo] = useState({
     detected: false,
     handX: 0.5,
@@ -254,15 +237,14 @@ export default function CVModelInspector({
     fps: 0
   });
 
-  // Smoothing interpolation refs
   const targetAngleRef = useRef({ x: 0.42, y: -0.55 });
   const targetZoomRef = useRef(initialZoom);
   const baseAreaRef = useRef(null);
   const detectionPersistenceRef = useRef(0);
+  const virtualAnimIdRef = useRef(null);
 
   // =========================================================================
-  // IMAGE-TO-CAD VECTOR EXTRACTION ENGINE:
-  // Analyzes image pixels, extracts vector edges, dimensions, centerlines, and 3D depth mesh
+  // IMAGE-TO-CAD VECTOR EXTRACTION ENGINE
   // =========================================================================
   const extractCADFromImage = useCallback((imgSrc, depthScale) => {
     setIsAnalyzing(true);
@@ -272,7 +254,7 @@ export default function CVModelInspector({
 
     img.onload = () => {
       try {
-        const res = 34; // 34x34 grid resolution
+        const res = 34;
         const procCanvas = document.createElement('canvas');
         procCanvas.width = res;
         procCanvas.height = res;
@@ -291,7 +273,6 @@ export default function CVModelInspector({
         const widthExtent = 115;
         const heightExtent = 115;
 
-        // 1. Compute 3D Vertices, Depth Heights & Sobel Gradients
         for (let j = 0; j < res; j++) {
           for (let i = 0; i < res; i++) {
             const idx = (j * res + i) * 4;
@@ -304,7 +285,6 @@ export default function CVModelInspector({
             const v = (j / (res - 1)) * 2 - 1;
             const dist = Math.sqrt(u * u + v * v);
 
-            // Natural 3D mechanical curvature hull
             const curvature = Math.max(0, Math.cos(Math.min(1, dist) * (Math.PI * 0.48)));
             const zRelief = (lum / 255 - 0.4) * depthScale + (curvature * 22);
 
@@ -312,7 +292,6 @@ export default function CVModelInspector({
             const yPos = v * heightExtent;
             const zPos = zRelief;
 
-            // Compute Sobel gradient magnitude for CAD edge tracing
             let grad = 0;
             if (i > 0 && i < res - 1 && j > 0 && j < res - 1) {
               const lumL = 0.299 * data[(j * res + i - 1) * 4] + 0.587 * data[(j * res + i - 1) * 4 + 1];
@@ -322,7 +301,6 @@ export default function CVModelInspector({
               grad = Math.sqrt(Math.pow(lumR - lumL, 2) + Math.pow(lumD - lumU, 2));
             }
 
-            // Defect / crack / wear detection
             const anomalyScore = (r * 1.6 - (g + b) * 0.6) + grad * 0.8;
             if (anomalyScore > maxGradient && dist < 0.85) {
               maxGradient = anomalyScore;
@@ -335,16 +313,10 @@ export default function CVModelInspector({
               };
             }
 
-            vertices.push({
-              x: xPos,
-              y: yPos,
-              z: zPos,
-              r, g, b, lum, grad
-            });
+            vertices.push({ x: xPos, y: yPos, z: zPos, r, g, b, lum, grad });
           }
         }
 
-        // 2. Generate 3D Polygons & CAD Contour Toolpaths
         for (let j = 0; j < res - 1; j++) {
           for (let i = 0; i < res - 1; i++) {
             const i0 = j * res + i;
@@ -372,7 +344,6 @@ export default function CVModelInspector({
               isEdge: avgGrad > 28
             });
 
-            // Extract high-contrast vector lines for 2D CAD Blueprint
             if (avgGrad > 32) {
               cadContourLines.push({
                 x1: v0.x, y1: v0.y,
@@ -383,7 +354,6 @@ export default function CVModelInspector({
           }
         }
 
-        // 3. Volumetric CAD Base Plate & Skirt Extrusions
         const baseZ = -22;
         const sideWalls = [];
         for (let i = 0; i < res - 1; i++) {
@@ -423,14 +393,12 @@ export default function CVModelInspector({
     };
   }, []);
 
-  // Run CAD extraction on image or extrusion change
   useEffect(() => {
     if (activeImageSrc) {
       extractCADFromImage(activeImageSrc, extrusionDepth);
     }
   }, [activeImageSrc, extrusionDepth, extractCADFromImage]);
 
-  // Handle Custom File Upload
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
@@ -441,21 +409,26 @@ export default function CVModelInspector({
     }
   };
 
-  // Enumerate video devices
+  // =========================================================================
+  // CAMERA DETECTION, DIMENSIONS CHECK & REDIRECTION CONTROLS
+  // =========================================================================
   const updateDeviceList = useCallback(async () => {
     if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
+        // Filter video inputs and skip IR sensors if possible
         const cams = devices.filter(d => d.kind === 'videoinput');
         setVideoDevices(cams);
+
         if (cams.length > 0 && !selectedDeviceId) {
-          const frontCam = cams.find(c => 
-            c.label.toLowerCase().includes('front') || 
-            c.label.toLowerCase().includes('user') || 
-            c.label.toLowerCase().includes('integrated') ||
-            c.label.toLowerCase().includes('face')
-          );
-          setSelectedDeviceId(frontCam ? frontCam.deviceId : cams[0].deviceId);
+          // Priority to front/RGB cameras
+          const frontCam = cams.find(c => {
+            const l = (c.label || '').toLowerCase();
+            return !l.includes('ir') && (l.includes('front') || l.includes('user') || l.includes('integrated') || l.includes('face') || l.includes('webcam'));
+          });
+          const best = frontCam || cams.find(c => !c.label.toLowerCase().includes('ir')) || cams[0];
+          setSelectedDeviceId(best.deviceId);
+          setActiveCameraLabel(best.label || 'Webcam 1');
         }
       } catch (err) {
         console.warn("Camera enum error:", err);
@@ -467,73 +440,213 @@ export default function CVModelInspector({
     updateDeviceList();
   }, [updateDeviceList]);
 
-  // Front camera stream
-  const getFrontCameraStream = async (deviceId = null) => {
+  // Request camera stream with dynamic dimensions (No rigid 640x480 constraints)
+  const getCameraStreamWithFlexibleDimensions = async (targetDeviceId = null) => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error("Camera API not supported or browser blocked.");
     }
-    const constraintsAttempts = [
-      { video: { facingMode: { ideal: 'user' }, width: { ideal: 640 }, height: { ideal: 480 } } },
-      deviceId ? { video: { deviceId: { ideal: deviceId } } } : null,
+
+    // Constraints priority: targetDeviceId exact -> targetDeviceId ideal -> user facing -> generic video true
+    const attempts = [
+      targetDeviceId ? { video: { deviceId: { exact: targetDeviceId } } } : null,
+      targetDeviceId ? { video: { deviceId: { ideal: targetDeviceId } } } : null,
+      { video: { facingMode: { ideal: 'user' } } },
       { video: { facingMode: 'user' } },
       { video: true }
     ].filter(Boolean);
 
     let lastError = null;
-    for (const constraints of constraintsAttempts) {
+    for (const constraints of attempts) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        if (stream && stream.getVideoTracks().length > 0) return stream;
+        if (stream && stream.getVideoTracks().length > 0) {
+          return stream;
+        }
       } catch (err) {
         lastError = err;
       }
     }
-    throw lastError || new Error("Could not access front camera.");
+    throw lastError || new Error("Could not detect webcam with available dimensions.");
   };
 
-  // Toggle Camera
-  const toggleCamera = async () => {
-    if (cameraActive) {
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-        videoRef.current.srcObject = null;
-      }
-      setCameraActive(false);
-      setTrackingInfo(prev => ({ ...prev, detected: false, box: null }));
-      baseAreaRef.current = null;
-      detectionPersistenceRef.current = 0;
-      return;
+  // Stop active camera
+  const stopCameraStream = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
+    if (virtualAnimIdRef.current) {
+      cancelAnimationFrame(virtualAnimIdRef.current);
+      virtualAnimIdRef.current = null;
+    }
+    setCameraActive(false);
+    setIsVirtualFeed(false);
+    setTrackingInfo(prev => ({ ...prev, detected: false, box: null }));
+    baseAreaRef.current = null;
+    detectionPersistenceRef.current = 0;
+  };
 
+  // Start or Redirect Camera Stream
+  const startCameraStream = async (targetDeviceId = null) => {
     try {
       setCameraError(null);
-      const stream = await getFrontCameraStream(selectedDeviceId);
+      stopCameraStream();
+
+      const stream = await getCameraStreamWithFlexibleDimensions(targetDeviceId);
+      const track = stream.getVideoTracks()[0];
+      const settings = track.getSettings ? track.getSettings() : {};
+
+      // Identify camera device label and native dimensions
+      const devLabel = track.label || 'Active Webcam';
+      setActiveCameraLabel(devLabel);
+      if (track.getSettings().deviceId) {
+        setSelectedDeviceId(track.getSettings().deviceId);
+      }
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
         videoRef.current.setAttribute('playsinline', '');
         videoRef.current.setAttribute('muted', '');
+
+        // Listen for metadata to read real hardware dimensions
+        videoRef.current.onloadedmetadata = () => {
+          const w = videoRef.current.videoWidth || settings.width || 640;
+          const h = videoRef.current.videoHeight || settings.height || 480;
+          const aspect = (w / h).toFixed(2);
+          setCameraDimensions({ width: w, height: h, aspect: aspect === '1.78' ? '16:9' : (aspect === '1.33' ? '4:3' : `${w}×${h}`) });
+
+          // Adjust internal CV processing canvas matching the camera's aspect ratio
+          if (cvCanvasRef.current) {
+            const scale = Math.min(1, 160 / Math.max(w, h));
+            cvCanvasRef.current.width = Math.round(w * scale);
+            cvCanvasRef.current.height = Math.round(h * scale);
+          }
+        };
+
         await videoRef.current.play().catch(console.warn);
       }
+
       setCameraActive(true);
+      setIsVirtualFeed(false);
       setIsAutoRotating(false);
       baseAreaRef.current = null;
       detectionPersistenceRef.current = 0;
       await updateDeviceList();
     } catch (err) {
       console.error("Camera access failed:", err);
-      let msg = "Could not activate front camera. Manual mouse & zoom controls active!";
+      let msg = "Could not detect or activate camera.";
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        msg = "Camera permission was denied. Please allow camera access in your browser.";
+        msg = "Camera permission was denied. Please click the lock/camera icon in your address bar and allow camera access.";
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        msg = "No front camera detected on your system. Click 'Redirect Camera' or 'Virtual Test Feed'.";
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        msg = "Camera is currently locked by another application (Teams, Zoom, etc.). Try redirecting to another camera.";
+      } else if (err.name === 'OverconstrainedError') {
+        msg = "Camera did not support constraints. Redirecting with flexible dimensions...";
       }
       setCameraError(msg);
       setCameraActive(false);
     }
   };
 
-  // Computer Vision Processing Loop (Skin Chrominance + Distance Tracking)
+  // Toggle Camera
+  const toggleCamera = async () => {
+    if (cameraActive) {
+      stopCameraStream();
+    } else {
+      await startCameraStream(selectedDeviceId);
+    }
+  };
+
+  // REDIRECT CAMERA: Cycle to next available videoinput device
+  const redirectCamera = async () => {
+    if (videoDevices.length === 0) {
+      await updateDeviceList();
+    }
+    const devices = videoDevices;
+    if (devices.length > 0) {
+      const currentIndex = devices.findIndex(d => d.deviceId === selectedDeviceId);
+      const nextIndex = (currentIndex + 1) % devices.length;
+      const nextDevice = devices[nextIndex];
+      setSelectedDeviceId(nextDevice.deviceId);
+      setActiveCameraLabel(nextDevice.label || `Camera ${nextIndex + 1}`);
+      await startCameraStream(nextDevice.deviceId);
+    } else {
+      // Re-attempt user facing
+      await startCameraStream(null);
+    }
+  };
+
+  // REDIRECT TO VIRTUAL TEST FEED (Fallback if camera is in use or blocked)
+  const startVirtualFeed = () => {
+    stopCameraStream();
+    setCameraError(null);
+    setIsVirtualFeed(true);
+    setCameraActive(true);
+    setActiveCameraLabel('Virtual Simulation Stream (Test)');
+    setCameraDimensions({ width: 640, height: 480, aspect: '4:3' });
+
+    let t = 0;
+    const runVirtualFeed = () => {
+      t += 0.025;
+      // Simulated hand distance (sinusoidal pulse)
+      const simulatedArea = 0.05 + 0.04 * Math.sin(t);
+      const simulatedZoom = Math.max(0.6, Math.min(2.5, 1.0 * Math.sqrt(simulatedArea / 0.04)));
+      const simulatedX = 0.5 + 0.2 * Math.cos(t * 0.7);
+      const simulatedY = 0.5 + 0.15 * Math.sin(t * 0.5);
+
+      targetZoomRef.current = simulatedZoom;
+      targetAngleRef.current = {
+        x: (simulatedY - 0.5) * 1.4,
+        y: (simulatedX - 0.5) * 2.2 * Math.PI
+      };
+
+      // Draw simulated hand reticle on overlay canvas
+      if (overlayCanvasRef.current) {
+        const oCtx = overlayCanvasRef.current.getContext('2d');
+        const ow = overlayCanvasRef.current.width;
+        const oh = overlayCanvasRef.current.height;
+        oCtx.clearRect(0, 0, ow, oh);
+
+        const ocx = simulatedX * ow;
+        const ocy = simulatedY * oh;
+        const obw = 40 + 20 * Math.sin(t);
+        const obh = 40 + 20 * Math.sin(t);
+
+        oCtx.strokeStyle = '#10B981';
+        oCtx.lineWidth = 2;
+        oCtx.strokeRect(ocx - obw / 2, ocy - obh / 2, obw, obh);
+
+        oCtx.beginPath();
+        oCtx.arc(ocx, ocy, 5, 0, Math.PI * 2);
+        oCtx.fillStyle = '#34D399';
+        oCtx.fill();
+
+        oCtx.fillStyle = '#10B981';
+        oCtx.font = 'bold 9px monospace';
+        oCtx.fillText(`SIM ZOOM: ${simulatedZoom.toFixed(2)}x`, Math.max(4, ocx - obw / 2), Math.max(12, ocy - obh / 2 - 4));
+      }
+
+      setTrackingInfo({
+        detected: true,
+        handX: simulatedX,
+        handY: simulatedY,
+        handAreaRatio: simulatedArea,
+        zoomDelta: simulatedZoom,
+        box: [simulatedX - 0.1, simulatedY - 0.1, simulatedX + 0.1, simulatedY + 0.1],
+        fps: 30
+      });
+
+      virtualAnimIdRef.current = requestAnimationFrame(runVirtualFeed);
+    };
+
+    virtualAnimIdRef.current = requestAnimationFrame(runVirtualFeed);
+  };
+
+  // Real Computer Vision Processing Loop (Skin Chrominance + Distance Tracking)
   useEffect(() => {
-    if (!cameraActive) return;
+    if (!cameraActive || isVirtualFeed) return;
 
     let animId;
     let lastTime = performance.now();
@@ -570,7 +683,6 @@ export default function CVModelInspector({
             const g = curr[idx + 1];
             const b = curr[idx + 2];
 
-            // YCbCr Skin Chrominance
             const Y = 0.299 * r + 0.587 * g + 0.114 * b;
             const Cb = -0.168736 * r - 0.331264 * g + 0.5 * b + 128;
             const Cr = 0.5 * r - 0.418688 * g - 0.081312 * b + 128;
@@ -620,12 +732,10 @@ export default function CVModelInspector({
             baseAreaRef.current = Math.max(0.04, areaRatio);
           }
 
-          // Hand Zoom: Moving closer to camera zooms in on CAD details
           const areaFactor = areaRatio / Math.max(0.02, baseAreaRef.current);
           const computedZoom = Math.max(0.5, Math.min(2.8, 1.0 * Math.sqrt(areaFactor * 1.35)));
           targetZoomRef.current = computedZoom;
 
-          // Hand X / Y controls 3D CAD rotation & pitch tilt
           const rotDeltaX = (centroidX - 0.5) * 2.2;
           const rotDeltaY = (centroidY - 0.5) * 1.4;
           targetAngleRef.current = {
@@ -633,7 +743,6 @@ export default function CVModelInspector({
             y: rotDeltaX * Math.PI
           };
 
-          // Corner brackets HUD overlay on webcam
           const scaleX = ow / w;
           const scaleY = oh / h;
           const obx = minX * scaleX;
@@ -703,7 +812,7 @@ export default function CVModelInspector({
 
     animId = requestAnimationFrame(processCVFrame);
     return () => cancelAnimationFrame(animId);
-  }, [cameraActive]);
+  }, [cameraActive, isVirtualFeed]);
 
   // Smooth Interpolation for 3D rotation and Zoom
   useEffect(() => {
@@ -740,7 +849,7 @@ export default function CVModelInspector({
   }, [cameraActive, trackingInfo.detected, isAutoRotating, isDragging]);
 
   // =========================================================================
-  // CAD CANVAS RENDERING ENGINE (Directly derived from the image!)
+  // CAD CANVAS RENDERING ENGINE
   // =========================================================================
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -760,7 +869,6 @@ export default function CVModelInspector({
       ctx.fillStyle = '#0B132B';
       ctx.fillRect(0, 0, width, height);
 
-      // Cyan / Blue technical grid lines
       ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
       ctx.lineWidth = 1;
       const step = 25;
@@ -777,7 +885,6 @@ export default function CVModelInspector({
         ctx.stroke();
       }
 
-      // 3D Perspective Projector
       const baseFov = 380;
       const cameraZ = 330;
       const currentScaleFactor = zoomLevel;
@@ -803,15 +910,11 @@ export default function CVModelInspector({
         };
       };
 
-      // IF CAD MODEL IS LOADED, RENDER THE ACTIVE CAD PROJECTION
       if (cadModel) {
         if (cadViewMode === '2d-blueprint') {
-          // =======================================================
-          // MODE 1: 2D TECHNICAL CAD BLUEPRINT (Direct from image)
-          // =======================================================
+          // 2D TECHNICAL BLUEPRINT
           const bScale = currentScaleFactor * 1.05;
 
-          // Centerlines (Dash-dot CL lines)
           ctx.strokeStyle = '#0284C7';
           ctx.lineWidth = 1.2;
           ctx.setLineDash([12, 4, 3, 4]);
@@ -823,13 +926,11 @@ export default function CVModelInspector({
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Centerline CL Symbol
           ctx.fillStyle = '#38BDF8';
           ctx.font = 'bold 10px monospace';
           ctx.fillText('CL', cx + 165 * bScale, cy + 3);
           ctx.fillText('CL', cx - 8, cy - 165 * bScale);
 
-          // Vectorized CAD contours extracted from the image
           ctx.strokeStyle = '#E0F2FE';
           cadModel.cadContourLines.forEach(line => {
             ctx.lineWidth = line.weight * 1.1;
@@ -839,25 +940,21 @@ export default function CVModelInspector({
             ctx.stroke();
           });
 
-          // Overall Dimension Lines: Width Dimension (Top)
           const dimY = cy - 135 * bScale;
           const leftX = cx - (Number(cadModel.envelope.width) / 2) * bScale;
           const rightX = cx + (Number(cadModel.envelope.width) / 2) * bScale;
 
           ctx.strokeStyle = '#38BDF8';
           ctx.lineWidth = 1.2;
-          // Extension lines
           ctx.beginPath();
           ctx.moveTo(leftX, cy - 120 * bScale);
           ctx.lineTo(leftX, dimY - 6);
           ctx.moveTo(rightX, cy - 120 * bScale);
           ctx.lineTo(rightX, dimY - 6);
-          // Dimension line
           ctx.moveTo(leftX, dimY);
           ctx.lineTo(rightX, dimY);
           ctx.stroke();
 
-          // Arrowheads
           ctx.fillStyle = '#38BDF8';
           const drawArrow = (ax, ay, dir) => {
             ctx.beginPath();
@@ -870,13 +967,11 @@ export default function CVModelInspector({
           drawArrow(leftX, dimY, 1);
           drawArrow(rightX, dimY, -1);
 
-          // Dimension Text
           ctx.font = 'bold 11px monospace';
           ctx.textAlign = 'center';
           ctx.fillText(`${cadModel.envelope.width} mm ±0.05`, cx, dimY - 5);
           ctx.textAlign = 'left';
 
-          // Defect Leader Line
           if (cadModel.defect) {
             const defX = cx + cadModel.defect.x * bScale;
             const defY = cy + cadModel.defect.y * bScale;
@@ -887,7 +982,6 @@ export default function CVModelInspector({
             ctx.arc(defX, defY, 4, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Leader line with elbow
             ctx.beginPath();
             ctx.moveTo(defX, defY);
             ctx.lineTo(defX + 35, defY - 30);
@@ -902,9 +996,7 @@ export default function CVModelInspector({
           }
 
         } else if (cadViewMode === 'cross-section') {
-          // =======================================================
-          // MODE 2: SECTION A-A TRANSVERSE PROFILE (Direct from image)
-          // =======================================================
+          // SECTION A-A TRANSVERSE PROFILE
           const bScale = currentScaleFactor * 1.1;
           const midRow = Math.floor(cadModel.res / 2);
 
@@ -912,7 +1004,6 @@ export default function CVModelInspector({
           ctx.lineWidth = 2;
           ctx.beginPath();
 
-          // Plot depth profile of the center slice
           const slicePts = [];
           for (let i = 0; i < cadModel.res; i++) {
             const v = cadModel.vertices[midRow * cadModel.res + i];
@@ -926,25 +1017,20 @@ export default function CVModelInspector({
             if (idx === 0) ctx.moveTo(pt.px, pt.py);
             else ctx.lineTo(pt.px, pt.py);
           });
-          // Draw bottom base
           ctx.lineTo(cx + 115 * bScale, cy + 30 * bScale);
           ctx.lineTo(cx - 115 * bScale, cy + 30 * bScale);
           ctx.closePath();
 
-          // Cross-hatch CAD fill pattern
           ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
           ctx.fill();
           ctx.stroke();
 
-          // Section A-A Cutting Plane Line Indicator
           ctx.fillStyle = '#38BDF8';
           ctx.font = 'bold 12px monospace';
           ctx.fillText(`SECTION A-A: CENTER PROFILE (${cadModel.envelope.thickness} mm MAX DEPTH)`, cx - 180, cy - 80);
 
         } else {
-          // =======================================================
-          // MODE 3: 3D ISOMETRIC CAD (SOLID or THERMAL FEA)
-          // =======================================================
+          // 3D ISOMETRIC CAD (SOLID or THERMAL FEA)
           const projVertices = cadModel.vertices.map(v => ({
             ...v,
             proj: project(v.x, v.y, v.z)
@@ -952,7 +1038,6 @@ export default function CVModelInspector({
 
           const renderElements = [];
 
-          // Image Surface Facets
           cadModel.polygons.forEach((poly, pIdx) => {
             const p0 = projVertices[poly.indices[0]].proj;
             const p1 = projVertices[poly.indices[1]].proj;
@@ -972,7 +1057,6 @@ export default function CVModelInspector({
             });
           });
 
-          // Skirt walls
           cadModel.sideWalls.forEach(wall => {
             const p1 = project(wall.p1.x, wall.p1.y, wall.p1.z);
             const p2 = project(wall.p2.x, wall.p2.y, wall.p2.z);
@@ -987,7 +1071,6 @@ export default function CVModelInspector({
             });
           });
 
-          // Painter's algorithm sort
           renderElements.sort((a, b) => b.z - a.z);
 
           renderElements.forEach(el => {
@@ -1011,7 +1094,6 @@ export default function CVModelInspector({
               ctx.lineWidth = 0.5;
               ctx.stroke();
             } else {
-              // 3D Isometric CAD Shading
               ctx.fillStyle = el.color;
               ctx.fill();
               ctx.strokeStyle = el.isEdge ? '#38BDF8' : 'rgba(0,0,0,0.2)';
@@ -1020,7 +1102,6 @@ export default function CVModelInspector({
             }
           });
 
-          // Hotspot Defect Annotation Pin
           if (cadModel.defect) {
             const hp = project(cadModel.defect.x, cadModel.defect.y, cadModel.defect.z);
             const pulse = 1 + 0.25 * Math.sin(performance.now() * 0.007);
@@ -1036,7 +1117,6 @@ export default function CVModelInspector({
             ctx.fillStyle = '#EF4444';
             ctx.fill();
 
-            // Callout Box
             ctx.fillStyle = '#0B132B';
             ctx.fillRect(hp.px + 12, hp.py - 16, 185, 26);
             ctx.strokeStyle = '#EF4444';
@@ -1052,9 +1132,7 @@ export default function CVModelInspector({
           }
         }
 
-        // =======================================================
-        // STANDARD ANSI/ISO CAD TITLE BLOCK (Bottom-Right)
-        // =======================================================
+        // Standard ANSI/ISO CAD Title Block
         const tbW = 210, tbH = 68;
         const tbX = width - tbW - 12;
         const tbY = height - tbH - 12;
@@ -1065,7 +1143,6 @@ export default function CVModelInspector({
         ctx.lineWidth = 1.2;
         ctx.strokeRect(tbX, tbY, tbW, tbH);
 
-        // Grid lines inside title block
         ctx.beginPath();
         ctx.moveTo(tbX, tbY + 22);
         ctx.lineTo(tbX + tbW, tbY + 22);
@@ -1094,7 +1171,6 @@ export default function CVModelInspector({
     return () => cancelAnimationFrame(animId);
   }, [rotationAngle, zoomLevel, cadViewMode, cadModel, activeImageTitle]);
 
-  // Mouse drag handlers
   const handleMouseDown = (e) => {
     setIsDragging(true);
     setIsAutoRotating(false);
@@ -1114,7 +1190,6 @@ export default function CVModelInspector({
 
   const handleMouseUp = () => setIsDragging(false);
 
-  // Manual Zoom controls
   const handleZoomIn = () => {
     targetZoomRef.current = Math.min(2.8, targetZoomRef.current + 0.35);
   };
@@ -1177,7 +1252,6 @@ export default function CVModelInspector({
 
         {/* Action Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          {/* Upload Custom Image Button */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -1205,7 +1279,7 @@ export default function CVModelInspector({
             onChange={handleFileUpload}
           />
 
-          {/* Toggle Camera */}
+          {/* Toggle Camera Primary Button */}
           <button
             type="button"
             onClick={toggleCamera}
@@ -1225,8 +1299,61 @@ export default function CVModelInspector({
             }}
           >
             {cameraActive ? <Video size={15} /> : <VideoOff size={15} />}
-            {cameraActive ? 'Front Camera: Active (CV Tracking)' : 'Start Front Camera (CV)'}
+            {cameraActive ? 'Camera Active' : 'Start Camera (CV)'}
           </button>
+
+          {/* REDIRECT CAMERA BUTTON: Cycles through available hardware cameras */}
+          <button
+            type="button"
+            onClick={redirectCamera}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(139, 92, 246, 0.2)',
+              border: '1.5px solid #8B5CF6',
+              color: '#C4B5FD',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+            title="Redirect or switch to next webcam sensor"
+          >
+            <SwitchCamera size={14} /> Redirect Camera
+          </button>
+
+          {/* Camera Selection Dropdown */}
+          <select
+            value={selectedDeviceId}
+            onChange={(e) => {
+              const newId = e.target.value;
+              setSelectedDeviceId(newId);
+              startCameraStream(newId);
+            }}
+            style={{
+              background: '#0F172A',
+              border: '1px solid #334155',
+              color: '#93C5FD',
+              padding: '6px 10px',
+              borderRadius: '8px',
+              fontSize: '11px',
+              cursor: 'pointer',
+              maxWidth: '180px'
+            }}
+            title="Select Camera Device"
+          >
+            {videoDevices.length > 0 ? (
+              videoDevices.map((d, i) => (
+                <option key={d.deviceId || i} value={d.deviceId}>
+                  📷 {d.label || `Camera ${i + 1}`}
+                </option>
+              ))
+            ) : (
+              <option value="">📷 Default Webcam</option>
+            )}
+          </select>
 
           {/* CAD View Mode Switcher */}
           <div style={{ display: 'flex', gap: '3px', background: '#0F172A', padding: '3px', borderRadius: '8px', border: '1px solid #334155' }}>
@@ -1364,6 +1491,7 @@ export default function CVModelInspector({
         </div>
       </div>
 
+      {/* Camera Diagnostic & Error Banner */}
       {cameraError && (
         <div style={{
           background: 'rgba(239, 68, 68, 0.15)',
@@ -1375,10 +1503,48 @@ export default function CVModelInspector({
           marginBottom: '14px',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px'
         }}>
-          <AlertTriangle size={16} color="#EF4444" />
-          <span>{cameraError}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertTriangle size={16} color="#EF4444" />
+            <span>{cameraError}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={redirectCamera}
+              style={{
+                background: 'rgba(56, 189, 248, 0.2)',
+                border: '1px solid #38BDF8',
+                color: '#38BDF8',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              🔄 Redirect Camera
+            </button>
+            <button
+              type="button"
+              onClick={startVirtualFeed}
+              style={{
+                background: 'rgba(16, 185, 129, 0.2)',
+                border: '1px solid #10B981',
+                color: '#6EE7B7',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              📺 Test Virtual Feed
+            </button>
+          </div>
         </div>
       )}
 
@@ -1540,14 +1706,14 @@ export default function CVModelInspector({
             </button>
           </div>
 
-          {/* Floating Front-Camera Feed with Live Computer Vision Tracking Overlay */}
+          {/* Floating Camera Preview with Dynamic Native Dimensions & Overlay */}
           {cameraActive && (
             <div style={{
               position: 'absolute',
               top: '12px',
               right: '12px',
-              width: '160px',
-              height: '120px',
+              width: '168px',
+              height: '126px',
               borderRadius: '12px',
               border: `2px solid ${trackingInfo.detected ? '#10B981' : '#38BDF8'}`,
               background: '#000',
@@ -1555,23 +1721,39 @@ export default function CVModelInspector({
               boxShadow: trackingInfo.detected ? '0 0 16px rgba(16, 185, 129, 0.5)' : '0 4px 20px rgba(0,0,0,0.7)',
               zIndex: 10
             }}>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: 'cover', 
-                  transform: 'scaleX(-1)' 
-                }}
-              />
+              {!isVirtualFeed ? (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover', 
+                    transform: 'scaleX(-1)' 
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: 'radial-gradient(circle, #1E293B 0%, #0F172A 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                  gap: '4px'
+                }}>
+                  <MonitorPlay size={24} color="#10B981" />
+                  <span style={{ fontSize: '9px', color: '#6EE7B7', fontWeight: 700 }}>Simulated Feed Active</span>
+                </div>
+              )}
 
               <canvas
                 ref={overlayCanvasRef}
-                width={160}
-                height={120}
+                width={168}
+                height={126}
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -1592,14 +1774,16 @@ export default function CVModelInspector({
                 alignItems: 'center',
                 fontSize: '9px',
                 fontWeight: 800,
-                background: 'rgba(0,0,0,0.75)',
+                background: 'rgba(0,0,0,0.78)',
                 padding: '2px 6px',
                 borderRadius: '4px'
               }}>
                 <span style={{ color: trackingInfo.detected ? '#10B981' : '#F59E0B' }}>
-                  {trackingInfo.detected ? '● HAND DETECTED' : '○ HOLD HAND UP'}
+                  {trackingInfo.detected ? '● TRACKED' : '○ HOLD HAND'}
                 </span>
-                <span style={{ color: '#94A3B8' }}>{trackingInfo.fps || 30} FPS</span>
+                <span style={{ color: '#93C5FD' }}>
+                  {cameraDimensions.width}×{cameraDimensions.height}
+                </span>
               </div>
 
               <div style={{
@@ -1610,14 +1794,17 @@ export default function CVModelInspector({
                 fontSize: '8px',
                 color: '#E5E7EB',
                 fontWeight: 600,
-                background: 'rgba(0,0,0,0.8)',
+                background: 'rgba(0,0,0,0.82)',
                 padding: '2px 4px',
                 borderRadius: '4px',
-                textAlign: 'center'
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}>
                 {trackingInfo.detected 
                   ? 'Push closer to ZOOM IN' 
-                  : 'Raise hand in front of camera'}
+                  : activeCameraLabel.slice(0, 24)}
               </div>
             </div>
           )}
@@ -1663,13 +1850,13 @@ export default function CVModelInspector({
 
         <div>
           <div style={{ fontSize: '11px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ZoomIn size={14} color="#10B981" /> CV Gesture State
+            <Camera size={14} color="#10B981" /> Camera Sensor / CV
           </div>
-          <div style={{ fontSize: '17px', fontWeight: 800, color: '#10B981', marginTop: '3px' }}>
-            {zoomLevel.toFixed(2)}x
+          <div style={{ fontSize: '16px', fontWeight: 800, color: '#10B981', marginTop: '3px' }}>
+            {cameraActive ? `${cameraDimensions.width}×${cameraDimensions.height}` : 'Standby'}
           </div>
           <div style={{ fontSize: '10px', color: '#6EE7B7' }}>
-            {cameraActive ? (trackingInfo.detected ? 'Hand Active: Zooming' : 'Raise hand to zoom') : 'Manual Zoom Ready'}
+            {cameraActive ? (isVirtualFeed ? 'Virtual Simulation Feed' : activeCameraLabel.slice(0, 20)) : 'Click Start or Redirect'}
           </div>
         </div>
 
