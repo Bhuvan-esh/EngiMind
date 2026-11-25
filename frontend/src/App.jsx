@@ -5,7 +5,7 @@ import {
   Mic, Camera, Search, Bell, ArrowRight, Settings, AlertCircle, 
   CheckCircle, Thermometer, Info, Quote, Rocket, Send, Paperclip,
   Volume2, VolumeX, User, Sparkles, Copy, Flame, ShieldAlert,
-  ChevronLeft, ChevronRight, Box, Crosshair
+  ChevronLeft, ChevronRight, Box, Crosshair, Eye
 } from 'lucide-react';
 import './index.css';
 import { callOpenRouter, getStoredKey, setStoredKey } from './openRouterApi';
@@ -16,12 +16,11 @@ import DocumentsView from './components/DocumentsView';
 import CatastropheRoom from './components/CatastropheRoom';
 import Turbine3DViewer from './components/Turbine3DViewer';
 import ImageDigitalTwin from './components/ImageDigitalTwin';
-import HoloInspectGame from './components/HoloInspectGame';
+import CVModelInspector from './components/CVModelInspector';
 import Toast from './components/Toast';
 
 function App() {
   const [hasEntered, setHasEntered] = useState(false);
-  const [introMode, setIntroMode] = useState('model'); // 'model' | 'game'
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
   const [toast, setToast] = useState(null);
@@ -346,60 +345,15 @@ Ensure it is valid JSON and nothing else.`;
           <h1 style={{ fontSize: '38px', fontWeight: 800, color: '#F9FAFB', letterSpacing: '-0.5px', marginBottom: '6px' }}>
             Engi<span style={{ color: '#8B5CF6' }}>Mind</span>
           </h1>
-          <p style={{ color: '#9CA3AF', fontSize: '15px', maxWidth: '520px', margin: '0 auto', lineHeight: 1.5 }}>
-            Interactive 3D mechanical assembly, Computer Vision gesture steering, and finite-element stress thermography.
+          <p style={{ color: '#9CA3AF', fontSize: '15px', maxWidth: '560px', margin: '0 auto', lineHeight: 1.5 }}>
+            AI Engineering Companion • Industrial Diagnostics, Real-Time Telemetry & 3D Digital Twin.
           </p>
         </div>
 
-        {/* Intro Mode Switcher */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', zIndex: 10 }}>
-          <button
-            type="button"
-            onClick={() => setIntroMode('model')}
-            style={{
-              background: introMode === 'model' ? '#8B5CF6' : 'rgba(31, 41, 55, 0.7)',
-              border: `1px solid ${introMode === 'model' ? '#A78BFA' : '#4B5563'}`,
-              color: '#fff',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            🌀 3D Digital Twin
-          </button>
-          <button
-            type="button"
-            onClick={() => setIntroMode('game')}
-            style={{
-              background: introMode === 'game' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(31, 41, 55, 0.7)',
-              border: `1.5px solid ${introMode === 'game' ? '#EF4444' : '#4B5563'}`,
-              color: introMode === 'game' ? '#FCA5A5' : '#D1D5DB',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <Crosshair size={14} color="#EF4444" /> 🎮 Play HoloInspect CV Game
-          </button>
+        {/* 3D Model Centerpiece */}
+        <div style={{ width: '100%', maxWidth: '680px', marginBottom: '24px', zIndex: 10 }}>
+          <Turbine3DViewer />
         </div>
-
-        {/* 3D Model or Game Centerpiece */}
-        {introMode === 'model' ? (
-          <div style={{ width: '100%', maxWidth: '680px', marginBottom: '24px', zIndex: 10 }}>
-            <Turbine3DViewer />
-          </div>
-        ) : (
-          <div style={{ width: '100%', maxWidth: '740px', marginBottom: '24px', zIndex: 10 }}>
-            <HoloInspectGame />
-          </div>
-        )}
 
         {/* Enter Button */}
         <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -459,7 +413,7 @@ Ensure it is valid JSON and nothing else.`;
           <div className={`nav-item ${activeView === 'documents' ? 'active' : ''}`} onClick={() => setActiveView('documents')}><FileText size={18} /> Documents</div>
           <div className={`nav-item ${activeView === 'quiz-generator' ? 'active' : ''}`} onClick={() => setActiveView('quiz-generator')}><HelpCircle size={18} /> Quiz Generator</div>
           <div className={`nav-item ${activeView === 'catastrophe-room' ? 'active' : ''}`} onClick={() => setActiveView('catastrophe-room')}><ShieldAlert size={18} color="#EF4444" /> Catastrophe Room 🚨</div>
-          <div className={`nav-item ${activeView === 'holo-inspect' ? 'active' : ''}`} onClick={() => setActiveView('holo-inspect')}><Crosshair size={18} color="#38BDF8" /> HoloInspect Game 🎮</div>
+          <div className={`nav-item ${activeView === 'cv-inspector' ? 'active' : ''}`} onClick={() => setActiveView('cv-inspector')}><Eye size={18} color="#38BDF8" /> 3D CV Inspector 🖐️</div>
           <div className={`nav-item ${activeView === 'maintenance-logs' ? 'active' : ''}`} onClick={triggerReportUI}><ClipboardList size={18} /> Maintenance Logs</div>
           <div className={`nav-item ${activeView === 'analytics' ? 'active' : ''}`} onClick={() => setActiveView('analytics')}><BarChart2 size={18} /> Analytics</div>
           <div className={`nav-item ${activeView === 'bookmarks' ? 'active' : ''}`} onClick={() => setActiveView('bookmarks')}><Bookmark size={18} /> Bookmarks</div>
@@ -601,12 +555,8 @@ Ensure it is valid JSON and nothing else.`;
                     <div className="arrow-circle"><ArrowRight size={14} /></div>
                   </button>
                 </div>
-                <div className="hero-illustration" style={{ flex: '1 1 400px', minWidth: '320px', maxWidth: '460px', padding: 0 }}>
-                  <Turbine3DViewer onInspectPart={(part) => {
-                    setPrompt(`Explain the failure modes, vibration spectrum, and maintenance criteria for the ${part} in an industrial turbine assembly.`);
-                    setActiveView('ask');
-                    showToast(`Loaded ${part} inspection into Ask EngiMind`, "info");
-                  }} />
+                <div className="hero-illustration">
+                  <img src="/robot.png" alt="EngiMind Robot" />
                 </div>
               </div>
 
@@ -642,6 +592,14 @@ Ensure it is valid JSON and nothing else.`;
                   <p>Explore subjects and course curriculum.</p>
                   <div className="fc-arrow"><ArrowRight size={14} /></div>
                 </div>
+              </div>
+
+              {/* 3D Component & Problem Inspector with CV Gestures (Orbit & Zoom) */}
+              <div style={{ marginBottom: '24px' }}>
+                <CVModelInspector 
+                  problemImage={imagePreviewUrl} 
+                  problemImageName={file?.name} 
+                />
               </div>
 
               {/* Bottom Grid: Insights & Recommendations */}
@@ -1007,14 +965,14 @@ Ensure it is valid JSON and nothing else.`;
                   />
                 </div>
 
-                {/* 3D Digital Twin & Thermal Telemetry on Image Upload/Paste */}
+                {/* 3D Problem Image Model with CV Gesture Orbit & Zoom */}
                 {imagePreviewUrl && file && file.type?.startsWith('image/') && (
-                  <ImageDigitalTwin 
-                    imageSrc={imagePreviewUrl} 
-                    fileName={file.name} 
-                    thermalData={imageThermalData} 
-                    isProcessing={isProcessing} 
-                  />
+                  <div style={{ marginBottom: '16px' }}>
+                    <CVModelInspector 
+                      problemImage={imagePreviewUrl} 
+                      problemImageName={file.name} 
+                    />
+                  </div>
                 )}
                 
                 <div className="ask-actions">
@@ -1147,9 +1105,15 @@ Ensure it is valid JSON and nothing else.`;
           />
         )}
 
-        {activeView === 'holo-inspect' && (
-          <div style={{ maxWidth: '860px', margin: '0 auto', width: '100%', padding: '24px 16px' }}>
-            <HoloInspectGame />
+        {activeView === 'cv-inspector' && (
+          <div style={{ maxWidth: '960px', margin: '0 auto', width: '100%', padding: '24px 16px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#F9FAFB' }}>3D Component & Problem Inspector</h2>
+              <p style={{ color: '#9CA3AF', fontSize: '14px', marginTop: '4px' }}>
+                Computer Vision Gesture Controls: Move hand closer to <strong>Zoom In</strong>, pull hand back to <strong>Zoom Out</strong>, or drag with mouse.
+              </p>
+            </div>
+            <CVModelInspector problemImage={imagePreviewUrl} problemImageName={file?.name} />
           </div>
         )}
 
