@@ -4,18 +4,48 @@ import {
   HelpCircle, ClipboardList, BarChart2, Bookmark, UploadCloud, Scan, 
   Mic, Camera, Search, Bell, ArrowRight, Settings, AlertCircle, 
   CheckCircle, Thermometer, Info, Quote, Rocket, Send, Paperclip,
-  Volume2, VolumeX
+  Volume2, VolumeX, User, Sparkles, Copy, Flame, ShieldAlert,
+  ChevronLeft, ChevronRight, Box, Crosshair
 } from 'lucide-react';
 import './index.css';
 import { callOpenRouter, getStoredKey, setStoredKey } from './openRouterApi';
+import TelemetryChart from './components/TelemetryChart';
+import MarkdownRenderer from './components/MarkdownRenderer';
+import QuizView from './components/QuizView';
+import DocumentsView from './components/DocumentsView';
+import CatastropheRoom from './components/CatastropheRoom';
+import Turbine3DViewer from './components/Turbine3DViewer';
+import ImageDigitalTwin from './components/ImageDigitalTwin';
+import HoloInspectGame from './components/HoloInspectGame';
+import Toast from './components/Toast';
 
 function App() {
+  const [hasEntered, setHasEntered] = useState(false);
+  const [introMode, setIntroMode] = useState('model'); // 'model' | 'game'
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
+  const [toast, setToast] = useState(null);
+
+  const quotes = [
+    { text: "Scientists discover the world that exists; engineers create the world that never was.", author: "Theodore von Kármán" },
+    { text: "Engineering problems don't need more paperwork. They need intelligence that understands context.", author: "EngiMind AI" },
+    { text: "The present is theirs; the future, for which I really worked, is mine.", author: "Nikola Tesla" },
+    { text: "Strive for perfection in everything you do. Take the best that exists and make it better.", author: "Sir Henry Royce" },
+    { text: "Without data, you're just another person with an opinion.", author: "W. Edwards Deming" },
+    { text: "To the engineer falls the job of clothing the bare bones of science with life, comfort, and hope.", author: "Herbert Hoover" }
+  ];
+  const [quoteIdx, setQuoteIdx] = useState(0);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
   
   // Ask EngiMind state
   const [prompt, setPrompt] = useState('');
   const [file, setFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [imageThermalData, setImageThermalData] = useState(null);
+  const [persona, setPersona] = useState('eli5'); // 'eli5' | 'academic' | 'veteran'
   const [analysisResult, setAnalysisResult] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -31,8 +61,10 @@ function App() {
       const entered = window.prompt("Please enter your OpenRouter API Key (get one free at openrouter.ai/keys):");
       if (entered && entered.trim()) {
         setStoredKey(entered.trim());
+        showToast("OpenRouter key saved successfully", "success");
         return entered.trim();
       }
+      showToast("API key is required to query AI models", "error");
       return null;
     }
     return currentKey;
@@ -52,8 +84,9 @@ Return ONLY a JSON object with the following keys:
 Ensure it is valid JSON and nothing else.`;
       const data = await callOpenRouter({ prompt: diagPrompt, jsonMode: true });
       setDiagnosisResult(data);
+      showToast("Machine diagnostics completed", "success");
     } catch (err) {
-      alert(`AI Core error: ${err.message}`);
+      showToast(`AI Core error: ${err.message}`, "error");
     } finally {
       setIsProcessing(false);
     }
@@ -73,8 +106,9 @@ Return ONLY a JSON object with the following keys:
 Ensure it is valid JSON and nothing else.`;
       const data = await callOpenRouter({ prompt: repPrompt, jsonMode: true });
       setReportResult(data);
+      showToast("Maintenance log generated", "success");
     } catch (err) {
-      alert(`AI Core error: ${err.message}`);
+      showToast(`AI Core error: ${err.message}`, "error");
     } finally {
       setIsProcessing(false);
     }
@@ -89,33 +123,85 @@ Ensure it is valid JSON and nothing else.`;
     setAnalysisResult('');
 
     try {
-      const queryPrompt = prompt.trim() || "Please analyze this attached document/image in the context of industrial engineering.";
+      const personaPrefixes = {
+        eli5: "Explain this using intuitive everyday real-world analogies (like bicycle pumps, teapots, or garden hoses). Avoid overly dry jargon unless explained simply. Keep it engaging, clear, and fun for a first-year engineering student.\n\n",
+        academic: "Provide an academically rigorous, exam-ready engineering derivation. State the governing physics equations, Navier-Stokes/Euler/thermodynamic laws, boundary conditions, and dimensionless numbers where applicable.\n\n",
+        veteran: "Adopt the persona of a grumpy, salty 30-year industrial plant maintenance veteran. Speak directly from dirty-hands field experience. Warn against rookie mistakes, mention wrench clearances, torque patterns, PPE, and safety, and deliver pragmatic, humorous advice.\n\n"
+      };
+      const basePrompt = prompt.trim() || "Please analyze this attached document/image in the context of industrial engineering.";
+      const queryPrompt = `${personaPrefixes[persona] || ""}${basePrompt}`;
       const responseText = await callOpenRouter({ prompt: queryPrompt, file });
       setAnalysisResult(responseText);
+      showToast("Analysis complete", "success");
     } catch (err) {
       setAnalysisResult(`Error generating response: ${err.message}`);
+      showToast(`Error: ${err.message}`, "error");
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const processPastedFile = (pastedFile) => {
+    if (pastedFile && pastedFile.type.startsWith('image/')) {
+      setFile(pastedFile);
+      const url = URL.createObjectURL(pastedFile);
+      setImagePreviewUrl(url);
+      setActiveView('ask');
+      setImageThermalData({
+        component: pastedFile.name ? pastedFile.name.replace(/\.[^/.]+$/, "") : "Inspected Component",
+        peakTemp: 88.2,
+        avgTemp: 64.5,
+        ambientTemp: 25.0,
+        heatFlux: '1,420 W/m²',
+        thermalExpansion: '+0.038 mm',
+        status: 'Elevated Warning',
+        hotspotZone: 'Bearing Race & Impeller Seal Collar',
+        isoSeverity: 'Class II - Zone B (Maintenance Required)'
+      });
+      showToast("Pasted image: 3D Digital Twin & Thermal Telemetry Generated!", "success");
+    }
+  };
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const f = e.target.files[0];
+      setFile(f);
+      if (f.type.startsWith('image/')) {
+        setImagePreviewUrl(URL.createObjectURL(f));
+        setImageThermalData({
+          component: f.name.replace(/\.[^/.]+$/, ""),
+          peakTemp: 86.4,
+          avgTemp: 63.8,
+          ambientTemp: 24.5,
+          heatFlux: '1,380 W/m²',
+          thermalExpansion: '+0.035 mm',
+          status: 'Elevated Warning',
+          hotspotZone: 'Drive Bearing & Dynamic Seal Interface',
+          isoSeverity: 'Class II - Zone B (Acceptable/Watch)'
+        });
+        showToast(`Image loaded: 3D Digital Twin & Thermal Telemetry Generated!`, "success");
+      } else {
+        setImagePreviewUrl(null);
+        setImageThermalData(null);
+        showToast(`Attached ${f.name}`, "info");
+      }
     }
   };
 
   const clearFile = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     setFile(null);
+    setImagePreviewUrl(null);
+    setImageThermalData(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    showToast("Attachment removed", "info");
   };
 
   const notImplemented = () => {
-    alert("This feature is currently in development.");
+    showToast("This feature is scheduled for the upcoming update.", "info");
   };
 
   const handleVoiceRecord = () => {
@@ -193,6 +279,161 @@ Ensure it is valid JSON and nothing else.`;
     };
   }, []);
 
+  React.useEffect(() => {
+    const handleGlobalPaste = (e) => {
+      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+        const pasted = e.clipboardData.files[0];
+        if (pasted.type.startsWith('image/')) {
+          processPastedFile(pasted);
+        }
+      }
+    };
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => window.removeEventListener('paste', handleGlobalPaste);
+  }, []);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!hasEntered && (e.key === 'Enter' || e.key === ' ')) {
+        setHasEntered(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasEntered]);
+
+  if (!hasEntered) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: '#0B0F17',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 99999,
+        padding: '24px',
+        color: '#F9FAFB',
+        userSelect: 'none'
+      }}>
+        {/* Glow ambient background */}
+        <div style={{
+          position: 'absolute',
+          width: '650px',
+          height: '650px',
+          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, rgba(11, 15, 23, 0) 70%)',
+          pointerEvents: 'none'
+        }} />
+
+        <div style={{ textAlign: 'center', marginBottom: '20px', zIndex: 10 }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(139, 92, 246, 0.15)',
+            border: '1px solid rgba(139, 92, 246, 0.35)',
+            color: '#C4B5FD',
+            padding: '6px 16px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            fontWeight: 600,
+            marginBottom: '12px',
+            letterSpacing: '0.5px'
+          }}>
+            <Box size={14} /> 3D DIGITAL TWIN • TELEMETRY CORE
+          </div>
+          <h1 style={{ fontSize: '38px', fontWeight: 800, color: '#F9FAFB', letterSpacing: '-0.5px', marginBottom: '6px' }}>
+            Engi<span style={{ color: '#8B5CF6' }}>Mind</span>
+          </h1>
+          <p style={{ color: '#9CA3AF', fontSize: '15px', maxWidth: '520px', margin: '0 auto', lineHeight: 1.5 }}>
+            Interactive 3D mechanical assembly, Computer Vision gesture steering, and finite-element stress thermography.
+          </p>
+        </div>
+
+        {/* Intro Mode Switcher */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', zIndex: 10 }}>
+          <button
+            type="button"
+            onClick={() => setIntroMode('model')}
+            style={{
+              background: introMode === 'model' ? '#8B5CF6' : 'rgba(31, 41, 55, 0.7)',
+              border: `1px solid ${introMode === 'model' ? '#A78BFA' : '#4B5563'}`,
+              color: '#fff',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            🌀 3D Digital Twin
+          </button>
+          <button
+            type="button"
+            onClick={() => setIntroMode('game')}
+            style={{
+              background: introMode === 'game' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(31, 41, 55, 0.7)',
+              border: `1.5px solid ${introMode === 'game' ? '#EF4444' : '#4B5563'}`,
+              color: introMode === 'game' ? '#FCA5A5' : '#D1D5DB',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <Crosshair size={14} color="#EF4444" /> 🎮 Play HoloInspect CV Game
+          </button>
+        </div>
+
+        {/* 3D Model or Game Centerpiece */}
+        {introMode === 'model' ? (
+          <div style={{ width: '100%', maxWidth: '680px', marginBottom: '24px', zIndex: 10 }}>
+            <Turbine3DViewer />
+          </div>
+        ) : (
+          <div style={{ width: '100%', maxWidth: '740px', marginBottom: '24px', zIndex: 10 }}>
+            <HoloInspectGame />
+          </div>
+        )}
+
+        {/* Enter Button */}
+        <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={() => {
+              setHasEntered(true);
+              showToast("Welcome to EngiMind Workspace", "success");
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+              border: 'none',
+              color: '#fff',
+              padding: '14px 38px',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 8px 30px rgba(139, 92, 246, 0.45)'
+            }}
+          >
+            Enter Workspace <ArrowRight size={20} />
+          </button>
+          <span style={{ fontSize: '12px', color: '#6B7280' }}>
+            Click above or press Enter to launch
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
       {/* Sidebar */}
@@ -217,6 +458,8 @@ Ensure it is valid JSON and nothing else.`;
           <div className={`nav-item ${activeView === 'syllabus-explorer' ? 'active' : ''}`} onClick={() => setActiveView('syllabus-explorer')}><Layers size={18} /> Syllabus Explorer</div>
           <div className={`nav-item ${activeView === 'documents' ? 'active' : ''}`} onClick={() => setActiveView('documents')}><FileText size={18} /> Documents</div>
           <div className={`nav-item ${activeView === 'quiz-generator' ? 'active' : ''}`} onClick={() => setActiveView('quiz-generator')}><HelpCircle size={18} /> Quiz Generator</div>
+          <div className={`nav-item ${activeView === 'catastrophe-room' ? 'active' : ''}`} onClick={() => setActiveView('catastrophe-room')}><ShieldAlert size={18} color="#EF4444" /> Catastrophe Room 🚨</div>
+          <div className={`nav-item ${activeView === 'holo-inspect' ? 'active' : ''}`} onClick={() => setActiveView('holo-inspect')}><Crosshair size={18} color="#38BDF8" /> HoloInspect Game 🎮</div>
           <div className={`nav-item ${activeView === 'maintenance-logs' ? 'active' : ''}`} onClick={triggerReportUI}><ClipboardList size={18} /> Maintenance Logs</div>
           <div className={`nav-item ${activeView === 'analytics' ? 'active' : ''}`} onClick={() => setActiveView('analytics')}><BarChart2 size={18} /> Analytics</div>
           <div className={`nav-item ${activeView === 'bookmarks' ? 'active' : ''}`} onClick={() => setActiveView('bookmarks')}><Bookmark size={18} /> Bookmarks</div>
@@ -255,6 +498,26 @@ Ensure it is valid JSON and nothing else.`;
             
             <button 
               className="btn-api-key"
+              onClick={() => setHasEntered(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(139, 92, 246, 0.12)',
+                border: '1px solid rgba(139, 92, 246, 0.35)',
+                color: '#C4B5FD',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
+              title="Return to 3D Digital Twin Intro"
+            >
+              <Box size={15} /> 3D View
+            </button>
+            <button 
+              className="btn-api-key"
               onClick={() => {
                 const k = window.prompt("Enter or Update OpenRouter API Key (sk-or-v1-...):", getStoredKey());
                 if (k !== null) {
@@ -286,7 +549,7 @@ Ensure it is valid JSON and nothing else.`;
             
             <div className="user-profile">
               <div className="avatar">
-                <img src="https://i.pravatar.cc/150?img=11" alt="User" />
+                <User size={18} color="#9CA3AF" />
                 <div className="status-dot"></div>
               </div>
             </div>
@@ -338,8 +601,12 @@ Ensure it is valid JSON and nothing else.`;
                     <div className="arrow-circle"><ArrowRight size={14} /></div>
                   </button>
                 </div>
-                <div className="hero-illustration">
-                  <img src="/robot.png" alt="EngiMind Robot" />
+                <div className="hero-illustration" style={{ flex: '1 1 400px', minWidth: '320px', maxWidth: '460px', padding: 0 }}>
+                  <Turbine3DViewer onInspectPart={(part) => {
+                    setPrompt(`Explain the failure modes, vibration spectrum, and maintenance criteria for the ${part} in an industrial turbine assembly.`);
+                    setActiveView('ask');
+                    showToast(`Loaded ${part} inspection into Ask EngiMind`, "info");
+                  }} />
                 </div>
               </div>
 
@@ -357,19 +624,19 @@ Ensure it is valid JSON and nothing else.`;
                   <p>Detect, analyze and find root causes of equipment failures.</p>
                   <div className="fc-arrow"><ArrowRight size={14} /></div>
                 </div>
-                <div className="feature-card" onClick={() => setActiveView('ask')}>
+                <div className="feature-card" onClick={() => setActiveView('study-resources')}>
                   <div className="fc-icon green"><BookOpen /></div>
                   <h3>Study Resources</h3>
                   <p>Access notes, PDFs, videos and important links.</p>
                   <div className="fc-arrow"><ArrowRight size={14} /></div>
                 </div>
-                <div className="feature-card" onClick={() => setActiveView('ask')}>
+                <div className="feature-card" onClick={() => setActiveView('quiz-generator')}>
                   <div className="fc-icon blue"><HelpCircle /></div>
                   <h3>Quiz Generator</h3>
                   <p>Generate quizzes and test your knowledge.</p>
                   <div className="fc-arrow"><ArrowRight size={14} /></div>
                 </div>
-                <div className="feature-card" onClick={() => setActiveView('ask')}>
+                <div className="feature-card" onClick={() => setActiveView('syllabus-explorer')}>
                   <div className="fc-icon orange"><Layers /></div>
                   <h3>Syllabus Explorer</h3>
                   <p>Explore subjects and course curriculum.</p>
@@ -381,15 +648,10 @@ Ensure it is valid JSON and nothing else.`;
               <div className="bottom-grid">
                 <div className="card">
                   <div className="card-header">
-                    <div className="card-title">AI Insights Overview</div>
-                    <span style={{fontSize:'12px', color:'#9CA3AF'}}>This Week ⌄</span>
+                    <div className="card-title">Plant Telemetry & Health</div>
                   </div>
-                  <div className="insights-chart">
-                    <div className="chart-path" style={{clipPath: 'polygon(0% 100%, 15% 80%, 30% 90%, 45% 50%, 60% 70%, 75% 20%, 90% 60%, 100% 50%, 100% 100%, 0% 100%)', background:'rgba(124, 58, 237, 0.2)'}}></div>
-                    <div className="chart-path" style={{clipPath: 'polygon(0% 100%, 15% 80%, 30% 90%, 45% 50%, 60% 70%, 75% 20%, 90% 60%, 100% 50%, 100% 100%)', height:'1px', opacity:1}}></div>
-                    <div style={{position:'absolute', top:'10%', left:'65%', background:'#1F2937', padding:'8px', borderRadius:'8px', fontSize:'11px', border:'1px solid #374151'}}>
-                      <span style={{color:'#9CA3AF'}}>AI Confidence</span><br/><strong style={{fontSize:'14px', color:'#10B981'}}>87%</strong><br/>High
-                    </div>
+                  <div style={{ padding: '4px 6px 12px' }}>
+                    <TelemetryChart />
                   </div>
                   <div className="stats-grid">
                     <div className="stat-item">
@@ -428,7 +690,15 @@ Ensure it is valid JSON and nothing else.`;
                     <div className="card-title">Top Recommendations</div>
                   </div>
                   <div className="recommendations-list">
-                    <div className="rec-item">
+                    <div 
+                      className="rec-item"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setPrompt("What is the root cause and standard procedure to replace a damaged DE bearing on industrial Motor #12A displaying excessive vibration?");
+                        setActiveView('ask');
+                        showToast("Loaded Motor #12A action into Ask EngiMind", "info");
+                      }}
+                    >
                       <div className="rec-icon" style={{background:'rgba(139,92,246,0.1)', color:'#A78BFA'}}><Settings size={20}/></div>
                       <div className="rec-content">
                         <div className="rec-header">
@@ -440,7 +710,15 @@ Ensure it is valid JSON and nothing else.`;
                       <ArrowRight size={16} color="#6B7280" />
                     </div>
                     
-                    <div className="rec-item">
+                    <div 
+                      className="rec-item"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setPrompt("How should I perform precision laser shaft alignment for centrifugal Pump #3B showing misalignment wear?");
+                        setActiveView('ask');
+                        showToast("Loaded Pump #3B action into Ask EngiMind", "info");
+                      }}
+                    >
                       <div className="rec-icon" style={{background:'rgba(245,158,11,0.1)', color:'#FCD34D'}}><Search size={20}/></div>
                       <div className="rec-content">
                         <div className="rec-header">
@@ -452,7 +730,15 @@ Ensure it is valid JSON and nothing else.`;
                       <ArrowRight size={16} color="#6B7280" />
                     </div>
 
-                    <div className="rec-item">
+                    <div 
+                      className="rec-item"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setPrompt("What are the thermal limits and common causes of temperature elevation in industrial reciprocating Compressor #7?");
+                        setActiveView('ask');
+                        showToast("Loaded Compressor #7 action into Ask EngiMind", "info");
+                      }}
+                    >
                       <div className="rec-icon" style={{background:'rgba(59,130,246,0.1)', color:'#93C5FD'}}><ClipboardList size={20}/></div>
                       <div className="rec-content">
                         <div className="rec-header">
@@ -464,7 +750,9 @@ Ensure it is valid JSON and nothing else.`;
                       <ArrowRight size={16} color="#6B7280" />
                     </div>
                   </div>
-                  <div className="view-all" onClick={notImplemented}>View All Recommendations <ArrowRight size={14} /></div>
+                  <div className="view-all" onClick={() => { setActiveView('fault-diagnosis'); showToast("Opened Fault Diagnosis", "info"); }}>
+                    View All Diagnostics <ArrowRight size={14} />
+                  </div>
                 </div>
               </div>
 
@@ -527,12 +815,39 @@ Ensure it is valid JSON and nothing else.`;
                 <div className="view-all" onClick={notImplemented}>View All Activity <ArrowRight size={14} /></div>
               </div>
 
-              <div className="quote-card">
-                <Quote size={24} className="quote-icon" />
-                <div className="quote-text">
-                  Engineering problems don't need more paperwork. They need intelligence that understands context.
+              {/* Quotes Below Recent Activity */}
+              <div className="quote-card" style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Quote size={20} className="quote-icon" />
+                    <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Engineering Wisdom</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setQuoteIdx((prev) => (prev - 1 + quotes.length) % quotes.length)}
+                      style={{ background: 'rgba(55, 65, 81, 0.4)', border: '1px solid #4B5563', borderRadius: '4px', color: '#9CA3AF', cursor: 'pointer', padding: '2px 4px', display: 'flex' }}
+                      title="Previous Quote"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600, padding: '0 4px' }}>{quoteIdx + 1}/{quotes.length}</span>
+                    <button
+                      type="button"
+                      onClick={() => setQuoteIdx((prev) => (prev + 1) % quotes.length)}
+                      style={{ background: 'rgba(55, 65, 81, 0.4)', border: '1px solid #4B5563', borderRadius: '4px', color: '#9CA3AF', cursor: 'pointer', padding: '2px 4px', display: 'flex' }}
+                      title="Next Quote"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
                 </div>
-                <div className="quote-author">— EngiMind</div>
+                <div className="quote-text" style={{ minHeight: '52px', fontStyle: 'italic', lineHeight: 1.45, transition: 'all 0.3s' }}>
+                  "{quotes[quoteIdx].text}"
+                </div>
+                <div className="quote-author" style={{ marginTop: '8px', color: '#A78BFA', fontWeight: 600 }}>
+                  — {quotes[quoteIdx].author}
+                </div>
               </div>
 
             </div>
@@ -546,6 +861,76 @@ Ensure it is valid JSON and nothing else.`;
               <p style={{color: '#9CA3AF', fontSize: '14px', marginBottom: '8px'}}>Describe your engineering problem, paste logs, or upload documents and images for analysis.</p>
               
               <form onSubmit={handleAnalyze} style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                {/* Persona Dial */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: 'rgba(31, 41, 55, 0.6)',
+                  border: '1px solid #374151',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#9CA3AF', fontWeight: 600 }}>
+                    <Sparkles size={14} color="#A78BFA" /> Response Persona:
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => { setPersona('eli5'); showToast("Switched to ELI5 Analogies mode", "info"); }}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        background: persona === 'eli5' ? 'rgba(245, 158, 11, 0.25)' : 'transparent',
+                        border: `1px solid ${persona === 'eli5' ? '#F59E0B' : '#374151'}`,
+                        color: persona === 'eli5' ? '#FCD34D' : '#9CA3AF'
+                      }}
+                      title="Explains using everyday analogies and intuitive physical models"
+                    >
+                      🐣 ELI5 Analogies
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPersona('academic'); showToast("Switched to Exam Derivations mode", "info"); }}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        background: persona === 'academic' ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
+                        border: `1px solid ${persona === 'academic' ? '#3B82F6' : '#374151'}`,
+                        color: persona === 'academic' ? '#93C5FD' : '#9CA3AF'
+                      }}
+                      title="Academically rigorous, formulas, governing equations, and derivations"
+                    >
+                      🎓 Exam Derivations
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPersona('veteran'); showToast("Switched to Grumpy Plant Veteran mode", "info"); }}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        background: persona === 'veteran' ? 'rgba(16, 185, 129, 0.25)' : 'transparent',
+                        border: `1px solid ${persona === 'veteran' ? '#10B981' : '#374151'}`,
+                        color: persona === 'veteran' ? '#6EE7B7' : '#9CA3AF'
+                      }}
+                      title="Blunt, salty 30-year industrial maintenance veteran advice"
+                    >
+                      🛠️ Grumpy Plant Veteran
+                    </button>
+                  </div>
+                </div>
+
                 <div className="ask-input-group">
                   <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <label htmlFor="prompt">Your Query</label>
@@ -561,10 +946,43 @@ Ensure it is valid JSON and nothing else.`;
                   <textarea 
                     id="prompt"
                     className="ask-textarea"
-                    placeholder="E.g., What are the common causes of high vibration in a centrifugal pump?"
+                    placeholder="E.g., What are the common causes of high vibration in a centrifugal pump? (Or paste an image anywhere with Ctrl+V)"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
+                    onPaste={(e) => {
+                      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+                        const p = e.clipboardData.files[0];
+                        if (p.type.startsWith('image/')) {
+                          processPastedFile(p);
+                        }
+                      }
+                    }}
                   />
+
+                  {/* Student Fun Presets */}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setPrompt("🔥 Roast my engineering design: Check for severe stress concentration factors, impossible machining features, tool clearance failures, and assembly headaches. Tell me why my shop technician will throw a wrench at me.")}
+                      style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#FCA5A5', padding: '4px 10px', borderRadius: '16px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      🔥 Roast My CAD / Design
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPrompt("🚀 Sanity check my homework calculation: I calculated a motor shaft speed of 180,000 RPM delivering 4,500 kW for a small 50mm centrifugal water pump. Does this make physical sense or will it vaporize the laboratory?")}
+                      style={{ background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#93C5FD', padding: '4px 10px', borderRadius: '16px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      🚀 Sanity Check My Calculation
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPrompt("🎧 Diagnose this machine sound: High-pitched whistling followed by rhythmic metallic thumping at 1x RPM in a centrifugal slurry pump. What is failing and how do I verify it?")}
+                      style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.3)', color: '#C4B5FD', padding: '4px 10px', borderRadius: '16px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      🎧 Diagnose Weird Machine Sound
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="ask-input-group">
@@ -588,6 +1006,16 @@ Ensure it is valid JSON and nothing else.`;
                     accept="image/*,.pdf,.txt,.doc,.docx,.csv"
                   />
                 </div>
+
+                {/* 3D Digital Twin & Thermal Telemetry on Image Upload/Paste */}
+                {imagePreviewUrl && file && file.type?.startsWith('image/') && (
+                  <ImageDigitalTwin 
+                    imageSrc={imagePreviewUrl} 
+                    fileName={file.name} 
+                    thermalData={imageThermalData} 
+                    isProcessing={isProcessing} 
+                  />
+                )}
                 
                 <div className="ask-actions">
                   <button type="submit" className="ask-submit-btn" disabled={isProcessing || (!prompt && !file)}>
@@ -608,16 +1036,28 @@ Ensure it is valid JSON and nothing else.`;
                     <Brain className="ask-result-icon" size={24} />
                     <div className="ask-result-title">EngiMind Analysis</div>
                   </div>
-                  <button 
-                    className="btn-speak" 
-                    onClick={() => handleSpeakResult(analysisResult)}
-                    title={isSpeaking ? "Stop speaking" : "Read aloud"}
-                  >
-                    {isSpeaking ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      className="btn-speak" 
+                      onClick={() => {
+                        navigator.clipboard.writeText(analysisResult);
+                        showToast("Copied to clipboard", "success");
+                      }}
+                      title="Copy to clipboard"
+                    >
+                      <Copy size={18} />
+                    </button>
+                    <button 
+                      className="btn-speak" 
+                      onClick={() => handleSpeakResult(analysisResult)}
+                      title={isSpeaking ? "Stop speaking" : "Read aloud"}
+                    >
+                      {isSpeaking ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="ask-result-content">
-                  {analysisResult}
+                  <MarkdownRenderer content={analysisResult} />
                 </div>
               </div>
             )}
@@ -692,28 +1132,134 @@ Ensure it is valid JSON and nothing else.`;
           </div>
         )}
 
-        {['study-resources', 'syllabus-explorer', 'documents', 'quiz-generator', 'analytics', 'bookmarks'].includes(activeView) && (
-          <div className="ask-content" style={{ alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-            <div className="ask-form-container" style={{ textAlign: 'center', maxWidth: '500px', width: '100%' }}>
-              <div style={{ marginBottom: '24px', opacity: 0.8 }}>
-                {activeView === 'study-resources' && <BookOpen size={48} color="#10B981" style={{ margin: '0 auto' }} />}
-                {activeView === 'syllabus-explorer' && <Layers size={48} color="#F59E0B" style={{ margin: '0 auto' }} />}
-                {activeView === 'documents' && <FileText size={48} color="#3B82F6" style={{ margin: '0 auto' }} />}
-                {activeView === 'quiz-generator' && <HelpCircle size={48} color="#8B5CF6" style={{ margin: '0 auto' }} />}
-                {activeView === 'analytics' && <BarChart2 size={48} color="#8B5CF6" style={{ margin: '0 auto' }} />}
-                {activeView === 'bookmarks' && <Bookmark size={48} color="#F59E0B" style={{ margin: '0 auto' }} />}
+        {activeView === 'quiz-generator' && (
+          <QuizView onShowToast={showToast} />
+        )}
+
+        {activeView === 'catastrophe-room' && (
+          <CatastropheRoom 
+            onOpenAskWithPrompt={(query) => {
+              setPrompt(query);
+              setActiveView('ask');
+              showToast("Loaded incident physics into Ask EngiMind", "info");
+            }} 
+            showToast={showToast} 
+          />
+        )}
+
+        {activeView === 'holo-inspect' && (
+          <div style={{ maxWidth: '860px', margin: '0 auto', width: '100%', padding: '24px 16px' }}>
+            <HoloInspectGame />
+          </div>
+        )}
+
+        {(activeView === 'documents' || activeView === 'study-resources') && (
+          <DocumentsView onAnalyzeDoc={(query) => {
+            setPrompt(query);
+            setActiveView('ask');
+            showToast("Loaded query into Ask EngiMind", "info");
+          }} />
+        )}
+
+        {activeView === 'syllabus-explorer' && (
+          <div style={{ maxWidth: '850px', margin: '0 auto', width: '100%', padding: '24px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+              <div style={{ display: 'inline-flex', padding: '12px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '16px', color: '#F59E0B', marginBottom: '12px' }}>
+                <Layers size={36} />
               </div>
-              <h2 style={{ textTransform: 'capitalize' }}>{activeView.replace('-', ' ')}</h2>
-              <p style={{ color: 'var(--text-muted)', marginTop: '12px', marginBottom: '32px' }}>
-                Your engineering {activeView.replace('-', ' ')} will be displayed here. The backend synchronization module for this view is currently being deployed.
+              <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#F9FAFB' }}>Engineering Curriculum & Syllabus Explorer</h2>
+              <p style={{ color: '#9CA3AF', fontSize: '14px', marginTop: '6px' }}>
+                Explore fundamental core engineering subjects and analyze syllabus modules with AI.
               </p>
-              <button className="btn-ask" style={{ margin: '0 auto' }} onClick={() => setActiveView('ask')}>
-                Go to Ask EngiMind <ArrowRight size={14} />
-              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '16px' }}>
+              {[
+                { title: 'Machine Design & Stress Analysis', code: 'ME-401', topics: 'Mohr Circle, Fatigue Failure (S-N Curve), Shaft & Key Sizing, Bearing Selection', color: '#8B5CF6' },
+                { title: 'Applied Thermodynamics & Heat Transfer', code: 'ME-302', topics: 'Rankine & Brayton Cycles, Heat Exchanger LMTD/NTU, Carnot Efficiency', color: '#EF4444' },
+                { title: 'Fluid Mechanics & Hydraulic Machinery', code: 'ME-305', topics: 'Navier-Stokes, Bernoulli Equation, Boundary Layer Theory, Pump Affinity Laws', color: '#3B82F6' },
+                { title: 'Industrial Control & Mechatronics', code: 'EE-410', topics: 'PID Controller Tuning, PLC Ladder Logic, Sensor Interfacing, Actuator Feedback', color: '#10B981' }
+              ].map((mod, i) => (
+                <div key={i} style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: '14px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: mod.color, background: `${mod.color}20`, padding: '3px 8px', borderRadius: '4px' }}>{mod.code}</span>
+                      <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Semester V/VI</span>
+                    </div>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F3F4F6', marginBottom: '8px' }}>{mod.title}</h3>
+                    <p style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '16px', lineHeight: '1.5' }}>
+                      <strong style={{ color: '#D1D5DB' }}>Core Topics: </strong>{mod.topics}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrompt(`Please provide a comprehensive study guide and key formulas for "${mod.title}" focusing on ${mod.topics}.`);
+                      setActiveView('ask');
+                      showToast(`Opened study guide for ${mod.code}`, "info");
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      background: 'rgba(245, 158, 11, 0.15)',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      color: '#FCD34D',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Study Module with EngiMind <ArrowRight size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(activeView === 'analytics' || activeView === 'bookmarks') && (
+          <div style={{ maxWidth: '850px', margin: '0 auto', width: '100%', padding: '24px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+              <div style={{ display: 'inline-flex', padding: '12px', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '16px', color: '#8B5CF6', marginBottom: '12px' }}>
+                <BarChart2 size={36} />
+              </div>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#F9FAFB' }}>Plant Analytics & Asset Registry</h2>
+              <p style={{ color: '#9CA3AF', fontSize: '14px', marginTop: '6px' }}>
+                Fleet health overview, vibration spectral trends, and active equipment monitors.
+              </p>
+            </div>
+
+            <div style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F3F4F6', marginBottom: '16px' }}>24-Hour Telemetry Multi-Sensor Monitor</h3>
+              <TelemetryChart />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              {[
+                { title: 'Fleet Availability', val: '98.4%', trend: '↑ 1.2%', color: '#10B981' },
+                { title: 'Mean Time Between Failures (MTBF)', val: '1,420 hrs', trend: '↑ 85 hrs', color: '#3B82F6' },
+                { title: 'Preventive Action Completion', val: '92.1%', trend: '↑ 4.3%', color: '#8B5CF6' }
+              ].map((m, idx) => (
+                <div key={idx} style={{ background: '#1F2937', border: '1px solid #374151', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '12px', color: '#9CA3AF', marginBottom: '6px' }}>{m.title}</div>
+                  <div style={{ fontSize: '20px', fontWeight: 700, color: '#F9FAFB', marginBottom: '4px' }}>{m.val}</div>
+                  <div style={{ fontSize: '11px', color: m.color, fontWeight: 600 }}>{m.trend}</div>
+                </div>
+              ))}
             </div>
           </div>
         )}
       </main>
+
+      <Toast 
+        message={toast?.message} 
+        type={toast?.type} 
+        onClose={() => setToast(null)} 
+      />
     </div>
   );
 }

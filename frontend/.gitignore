@@ -1,3 +1,10 @@
+# Environment & Secret files
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+
 # Logs
 logs
 *.log
